@@ -349,7 +349,7 @@ body[data-theme="dark"]{--tl:#FFB03A; --tl-lt:#FFE6B8}
 /* タイトル画面の「ホーム」は左上ではなく下のボタン行へ。左上の .brand は使わない */
 .brand{display:none}
 /* かざし続けて確定（dwell）の進捗バー：要素の下辺に細く */
-.opt,.tok{--dw:0}
+.opt,.tok,.uBtn,.tab{--dw:0}
 .dwelling::after{content:'';position:absolute;left:10%;right:10%;bottom:7%;height:.9vh;border-radius:100px;
   background:linear-gradient(90deg,var(--tl) calc(var(--dw)*100%),transparent calc(var(--dw)*100%));
   pointer-events:none;z-index:1}
@@ -374,6 +374,12 @@ body[data-theme="dark"]{--tl:#FFB03A; --tl-lt:#FFE6B8}
 .userStrip{flex-wrap:nowrap;gap:1.8vh;margin-bottom:2.2vh}
 .uBtn{padding:1vh 1.4vh .8vh}
 .uBtn svg{width:calc(6.5vh * var(--ui));height:calc(6.5vh * var(--ui))}
+/* 利用者えらびの専用画面（はじめる→ここ→ゲーム） */
+.userStrip.big{gap:3vh;margin:3vh 0 4vh}
+.userStrip.big .uBtn{padding:1.6vh 2.2vh 1.2vh;opacity:.75}
+.userStrip.big .uBtn.on{opacity:1}
+.userStrip.big .uBtn svg{width:calc(11vh * var(--ui));height:calc(11vh * var(--ui))}
+.userStrip.big .uName{font-size:clamp(15px,calc(2.6vh * var(--ui)),78px)}
 
 
 /* 練習ページの基調色はポインタと同じオレンジ */
@@ -453,7 +459,7 @@ window.TL=(function(){
   /* 操作対象。ゲーム側で増やすときは data-hit を付けるだけでよい */
   const SEL='.btn,.opt,.rp,.gear,.brand,.abort,.target,.tok.tappable,.mole,[data-hit]';
   const CLICKY='.btn,.opt,.rp,.gear,.brand,[data-hit=click]';   // onclick で動くもの
-  const DWELL='.opt,.tok.tappable,[data-dwell]';                 // かざし続けて確定するもの
+  const DWELL='.opt,.tok.tappable,.uBtn,.tab,[data-dwell]';     // かざし続けて確定するもの（利用者えらび・レポートのタブも）
   const vh=()=>innerHeight/100;
 
   /* ---------- 1. ポインタ球体 ---------- */

@@ -399,7 +399,7 @@ body[data-theme="dark"]{--tl:#FFB03A; --tl-lt:#FFE6B8}
 /* タイトル画面の「ホーム」は左上ではなく下のボタン行へ。左上の .brand は使わない */
 .brand{display:none}
 /* かざし続けて確定（dwell）の進捗バー：要素の下辺に細く */
-.opt,.tok{--dw:0}
+.opt,.tok,.uBtn,.tab{--dw:0}
 .dwelling::after{content:'';position:absolute;left:10%;right:10%;bottom:7%;height:.9vh;border-radius:100px;
   background:linear-gradient(90deg,var(--tl) calc(var(--dw)*100%),transparent calc(var(--dw)*100%));
   pointer-events:none;z-index:1}
@@ -424,6 +424,12 @@ body[data-theme="dark"]{--tl:#FFB03A; --tl-lt:#FFE6B8}
 .userStrip{flex-wrap:nowrap;gap:1.8vh;margin-bottom:2.2vh}
 .uBtn{padding:1vh 1.4vh .8vh}
 .uBtn svg{width:calc(6.5vh * var(--ui));height:calc(6.5vh * var(--ui))}
+/* 利用者えらびの専用画面（はじめる→ここ→ゲーム） */
+.userStrip.big{gap:3vh;margin:3vh 0 4vh}
+.userStrip.big .uBtn{padding:1.6vh 2.2vh 1.2vh;opacity:.75}
+.userStrip.big .uBtn.on{opacity:1}
+.userStrip.big .uBtn svg{width:calc(11vh * var(--ui));height:calc(11vh * var(--ui))}
+.userStrip.big .uName{font-size:clamp(15px,calc(2.6vh * var(--ui)),78px)}
 </style>
 </head>
 <body data-theme="light">
@@ -456,7 +462,7 @@ window.TL=(function(){
   /* 操作対象。ゲーム側で増やすときは data-hit を付けるだけでよい */
   const SEL='.btn,.opt,.rp,.gear,.brand,.abort,.target,.tok.tappable,.mole,[data-hit]';
   const CLICKY='.btn,.opt,.rp,.gear,.brand,[data-hit=click]';   // onclick で動くもの
-  const DWELL='.opt,.tok.tappable,[data-dwell]';                 // かざし続けて確定するもの
+  const DWELL='.opt,.tok.tappable,.uBtn,.tab,[data-dwell]';     // かざし続けて確定するもの（利用者えらび・レポートのタブも）
   const vh=()=>innerHeight/100;
 
   /* ---------- 1. ポインタ球体 ---------- */
@@ -903,10 +909,11 @@ window.USERS=(function(){
         <div class="rp byShape" data-mode="bad"><h4>ばくだん</h4><div class="rl">たたかない</div></div>
       </div>
       <div class="detail" id="detail"></div>
-      <div class="userStrip" id="userStrip"></div><div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;align-items:center"><button class="btn" id="startBtn">はじめる</button><button class="btn ghost" id="homeBtn3">ホームへ</button></div>
+      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;align-items:center"><button class="btn" id="startBtn">はじめる</button><button class="btn ghost" id="homeBtn3">ホームへ</button></div>
     </div>
   </div>
 
+  <div class="overlay hidden" id="userScreen"><div class="pc"><div class="blkNo">PLAYER</div><div class="blkTitle">だれが あそぶ？</div><div class="userStrip big" id="userStrip"></div><button class="btn ghost" id="userBackBtn">もどる</button></div></div>
   <div class="overlay hidden" id="cdScreen"><div class="countdown" id="cdNum">3</div></div>
 
   <div class="overlay hidden" id="resScreen">
@@ -1147,11 +1154,17 @@ function reset(){
 
 /* ===================== flow ===================== */
 $('startBtn').onclick=start;
-USERS.strip($('userStrip'));
 $('homeBtn3').onclick=()=>{location.href=HOME_URL;};
-$('againBtn').onclick=()=>{hide(resScreen);start();};
+$('againBtn').onclick=()=>{hide(resScreen);startGame();};   // 同じ人でもう一度
 
 function start(){
+  hide(startScreen);closeSet();show($('userScreen'));
+  /* 「はじめる」を押した手がまだ残っている。同じ位置に来るボタンの誤爆を避けるため少し待つ */
+  $('userScreen').style.pointerEvents='none';setTimeout(()=>{$('userScreen').style.pointerEvents='';},700);
+  USERS.strip($('userStrip'),()=>{hide($('userScreen'));startGame();});
+}
+$('userBackBtn').onclick=()=>{hide($('userScreen'));show(startScreen);};
+function startGame(){
   AC();runId++;reset();hide(startScreen);closeSet();
   document.body.classList.add('playing');
   updateDTChip();bgmStart();
