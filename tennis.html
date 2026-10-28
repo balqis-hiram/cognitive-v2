@@ -488,7 +488,7 @@ window.TL=(function(){
     pointer: QP.get('pointer')!=='0',
     idleMs: 900,       // 動きが止まってから球体が消えるまで
     snapVh: 7,         // 空振りを吸着する半径（画面高さ比）
-    debounceMs: 360,   // 同じ対象への連打を無視する時間
+    debounceMs: 360,   // 同じ対象の上に手がある間（連打がこの間隔以内で続く間）は1回扱い
     abortMs: 600,      // 中断に必要な「かざし続け」の時間
     abortGap: 400,     // クリックの間隔がこれより空いたら手が離れたとみなす
     dwellMs: 350,      // 密集した対象（設定の選択肢・MEMORY PATH のマス）で、かざし続けて確定するまでの時間
@@ -558,7 +558,7 @@ window.TL=(function(){
     el.dispatchEvent(ev);
     if(el.matches(CLICKY)){
       const n=performance.now();
-      if(el===lastClickEl&&n-lastClickT<CFG.debounceMs)return;
+      if(el===lastClickEl&&n-lastClickT<CFG.debounceMs){lastClickT=n;return;}
       lastClickEl=el;lastClickT=n;el.click();
     }
   }
@@ -609,6 +609,7 @@ window.TL=(function(){
     }
     if(el){
       if(!el.matches('.abort')&&el===lastDownEl&&n-lastDownT<CFG.debounceMs){
+        lastDownT=n;                                        // 連打が続く間は窓を伸ばし、手が離れるまで1回扱い
         e.stopPropagation();e.preventDefault();return;      // 連打の2発目以降は捨てる
       }
       lastDownEl=el;lastDownT=n;return;
@@ -622,7 +623,7 @@ window.TL=(function(){
     if(CFG.dwell&&e.target.closest&&e.target.closest(DWELL)){e.stopPropagation();e.preventDefault();return;}
     const el=e.target.closest&&e.target.closest(CLICKY);if(!el)return;
     const n=performance.now();
-    if(el===lastClickEl&&n-lastClickT<CFG.debounceMs){e.stopPropagation();e.preventDefault();return;}
+    if(el===lastClickEl&&n-lastClickT<CFG.debounceMs){lastClickT=n;e.stopPropagation();e.preventDefault();return;}
     lastClickEl=el;lastClickT=n;
   },true);
 
