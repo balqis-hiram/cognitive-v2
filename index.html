@@ -173,6 +173,12 @@ body[data-theme="dark"]{--tl:#FFB03A; --tl-lt:#FFE6B8}
 @media (max-width:1100px){#setScreen .pc{grid-template-columns:1fr}}
 /* タイトル画面の「ホーム」は左上ではなく下のボタン行へ。左上の .brand は使わない */
 .brand{display:none}
+/* かざし続けて確定（dwell）の進捗バー：要素の下辺に細く */
+.opt,.tok{--dw:0}
+.dwelling::after{content:'';position:absolute;left:10%;right:10%;bottom:7%;height:.9vh;border-radius:100px;
+  background:linear-gradient(90deg,var(--tl) calc(var(--dw)*100%),transparent calc(var(--dw)*100%));
+  pointer-events:none;z-index:1}
+.tok.dwelling{transform:scale(1.04)}
 
 /* ---- ホーム画面のタッチレス対応 ---- */
 .card,.nav{position:relative}
@@ -216,11 +222,15 @@ window.TL=(function(){
     snapVh: 7,         // 空振りを吸着する半径（画面高さ比）
     debounceMs: 360,   // 同じ対象への連打を無視する時間
     abortMs: 600,      // 中断に必要な「かざし続け」の時間
-    abortGap: 400      // クリックの間隔がこれより空いたら手が離れたとみなす
+    abortGap: 400,     // クリックの間隔がこれより空いたら手が離れたとみなす
+    dwellMs: 350,      // 密集した対象（設定の選択肢・MEMORY PATH のマス）で、かざし続けて確定するまでの時間
+    dwellGap: 300,     // クリックの間隔がこれより空いたら手が離れたとみなす（dwell用）
+    dwell: QP.get('dwell')!=='0'   // ?dwell=0 でマウス検証用に即時反応へ
   };
   /* 操作対象。ゲーム側で増やすときは data-hit を付けるだけでよい */
   const SEL='.btn,.opt,.rp,.gear,.brand,.abort,.target,.tok.tappable,.mole,[data-hit]';
   const CLICKY='.btn,.opt,.rp,.gear,.brand,[data-hit=click]';   // onclick で動くもの
+  const DWELL='.opt,.tok.tappable,[data-dwell]';                 // かざし続けて確定するもの
   const vh=()=>innerHeight/100;
 
   /* ---------- 1. ポインタ球体 ---------- */
@@ -284,11 +294,51 @@ window.TL=(function(){
       lastClickEl=el;lastClickT=n;el.click();
     }
   }
+  /* ---------- 2b. かざし続けて確定（dwell） ----------
+     密集した対象は、通りがかりの一瞬の反応で押さないよう、dwellMs のあいだ
+     手がとどまって（＝クリックが続いて／押し続けて）いたときだけ確定する。
+     進捗は要素の下辺に細いバーで出す */
+  const dw={el:null,start:0,lastTap:0,held:false,fired:false,raf:0};
+  function dwellClear(){
+    if(dw.el){dw.el.classList.remove('dwelling');dw.el.style.removeProperty('--dw');}
+    dw.el=null;dw.fired=false;
+  }
+  function dwellFire(el,e){
+    const n=performance.now();lastDownEl=el;lastDownT=n;
+    forward(el,e);
+  }
+  function dwellTouch(el,e){
+    const n=performance.now();
+    if(dw.el!==el){dwellClear();dw.el=el;dw.start=n;dw.fired=false;el.classList.add('dwelling');}
+    dw.lastTap=n;dw.held=true;dw.ev=e;
+    if(!dw.raf)dwellTick();
+  }
+  function dwellTick(){
+    dw.raf=requestAnimationFrame(()=>{
+      dw.raf=0;if(!dw.el)return;
+      const n=performance.now();
+      if(!dw.held&&n-dw.lastTap>CFG.dwellGap){dwellClear();return;}   // 手が離れた
+      // 進捗は「手がいた証拠」の時刻で測る：押し続け中なら今、連打なら最後のクリック時刻。
+      // こうしないと gap の猶予ぶんが上乗せされ、通りがかりの2クリックで確定してしまう
+      const p=Math.min(1,((dw.held?n:dw.lastTap)-dw.start)/CFG.dwellMs);
+      dw.el.style.setProperty('--dw',p);
+      if(p>=1&&!dw.fired){dw.fired=true;dwellFire(dw.el,dw.ev);dw.el.classList.remove('dwelling');}
+      dwellTick();
+    });
+  }
+  const dwRelease=()=>{dw.held=false;};
+  document.addEventListener('pointerup',dwRelease,true);
+  document.addEventListener('pointercancel',dwRelease,true);
+
   document.addEventListener('pointerdown',e=>{
     if(!e.isTrusted)return;
     if(e.target.closest&&e.target.closest('.court,[data-nosnap]'))return;
     const n=performance.now();
     const el=e.target.closest&&e.target.closest(SEL);
+    if(CFG.dwell){
+      const d=el&&el.matches(DWELL)?el:(!el?nearest(e.clientX,e.clientY):null);
+      if(d&&d.matches(DWELL)){e.stopPropagation();e.preventDefault();dwellTouch(d,e);return;}
+    }
     if(el){
       if(!el.matches('.abort')&&el===lastDownEl&&n-lastDownT<CFG.debounceMs){
         e.stopPropagation();e.preventDefault();return;      // 連打の2発目以降は捨てる
@@ -300,6 +350,8 @@ window.TL=(function(){
   },true);
   document.addEventListener('click',e=>{
     if(!e.isTrusted)return;
+    // dwell対象の click は本物を捨て、dwell 完了時の合成 click だけ通す
+    if(CFG.dwell&&e.target.closest&&e.target.closest(DWELL)){e.stopPropagation();e.preventDefault();return;}
     const el=e.target.closest&&e.target.closest(CLICKY);if(!el)return;
     const n=performance.now();
     if(el===lastClickEl&&n-lastClickT<CFG.debounceMs){e.stopPropagation();e.preventDefault();return;}
@@ -334,7 +386,7 @@ window.TL=(function(){
         raf=0;if(start===null)return;
         const n=performance.now();
         if(!held&&n-lastTap>gap){start=null;fill.style.width='0%';return;}
-        const p=(n-start)/ms;
+        const p=((held?n:lastTap)-start)/ms;          // dwell と同じく「手がいた証拠」の時刻で測る
         fill.style.width=Math.min(100,p*100)+'%';
         if(p>=1){
           start=null;held=false;fill.style.width='0%';
