@@ -346,6 +346,8 @@ body[data-theme="dark"]{--tl:#FFB03A; --tl-lt:#FFE6B8}
 #setScreen .setTitle,#setScreen .setNote{grid-column:1/-1}
 #setScreen .setNote{margin-top:1vh}
 @media (max-width:1100px){#setScreen .pc{grid-template-columns:1fr}}
+/* タイトル画面の「ホーム」は左上ではなく下のボタン行へ。左上の .brand は使わない */
+.brand{display:none}
 
 
 /* 練習ページの基調色はポインタと同じオレンジ */
@@ -727,6 +729,7 @@ window.AMBIENT=(function(){
       <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;align-items:center">
         <button class="btn" id="startBtn">はじめる</button>
         <button class="btn ghost" id="backBtn" style="display:none">ゲームへもどる</button>
+        <button class="btn ghost" id="homeBtn3">ホームへ</button>
       </div>
     </div>
   </div>
@@ -839,6 +842,7 @@ document.querySelectorAll('.rp').forEach(c=>{
 });
 $('homeBtn').onclick=()=>{location.href=HOME_URL;};
 $('homeBtn2').onclick=()=>{location.href=HOME_URL;};
+$('homeBtn3').onclick=()=>{location.href=HOME_URL;};
 if(BACK_URL){
   ['backBtn','backBtn2'].forEach(id=>{$(id).style.display='';$(id).onclick=()=>{location.href=BACK_URL;};});
 }

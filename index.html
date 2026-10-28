@@ -171,6 +171,8 @@ body[data-theme="dark"]{--tl:#FFB03A; --tl-lt:#FFE6B8}
 #setScreen .setTitle,#setScreen .setNote{grid-column:1/-1}
 #setScreen .setNote{margin-top:1vh}
 @media (max-width:1100px){#setScreen .pc{grid-template-columns:1fr}}
+/* タイトル画面の「ホーム」は左上ではなく下のボタン行へ。左上の .brand は使わない */
+.brand{display:none}
 
 /* ---- ホーム画面のタッチレス対応 ---- */
 .card,.nav{position:relative}

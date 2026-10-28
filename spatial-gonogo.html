@@ -378,6 +378,8 @@ body[data-theme="dark"]{--tl:#FFB03A; --tl-lt:#FFE6B8}
 #setScreen .setTitle,#setScreen .setNote{grid-column:1/-1}
 #setScreen .setNote{margin-top:1vh}
 @media (max-width:1100px){#setScreen .pc{grid-template-columns:1fr}}
+/* タイトル画面の「ホーム」は左上ではなく下のボタン行へ。左上の .brand は使わない */
+.brand{display:none}
 </style>
 </head>
 <body data-theme="light">
@@ -652,7 +654,7 @@ window.TL=(function(){
         <div class="rp byShape" data-mode="stop"><h4>あか</h4><div class="rl">タッチしない</div></div>
       </div>
       <div class="detail" id="detail"></div>
-      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;align-items:center"><button class="btn" id="startBtn">はじめる</button><button class="btn ghost" id="tutBtn">操作の練習</button></div>
+      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;align-items:center"><button class="btn" id="startBtn">はじめる</button><button class="btn ghost" id="tutBtn">操作の練習</button><button class="btn ghost" id="homeBtn3">ホームへ</button></div>
     </div>
   </div>
 
@@ -924,6 +926,7 @@ function reset(){
 /* ===================== flow ===================== */
 $('startBtn').onclick=start;
 $('tutBtn').onclick=()=>{location.href='tutorial.html?home='+encodeURIComponent(HOME_URL)+'&back='+encodeURIComponent(location.href);};
+$('homeBtn3').onclick=()=>{location.href=HOME_URL;};
 $('againBtn').onclick=()=>{hide(resScreen);start();};
 
 function start(){
