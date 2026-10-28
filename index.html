@@ -213,8 +213,8 @@ window.TL=(function(){
     idleMs: 900,       // 動きが止まってから球体が消えるまで
     snapVh: 7,         // 空振りを吸着する半径（画面高さ比）
     debounceMs: 360,   // 同じ対象への連打を無視する時間
-    abortMs: 2000,     // 中断に必要な「トントン」の継続時間
-    abortGap: 650      // この間隔より空いたらトントンが途切れたとみなす
+    abortMs: 1000,     // 中断に必要な「かざし続け」の時間（空間デバイスでは連打として届く）
+    abortGap: 500      // クリックの間隔がこれより空いたら手が離れたとみなす
   };
   /* 操作対象。ゲーム側で増やすときは data-hit を付けるだけでよい */
   const SEL='.btn,.opt,.rp,.gear,.brand,.abort,.target,.tok.tappable,.mole,[data-hit]';
@@ -330,7 +330,7 @@ window.TL=(function(){
           start=null;held=false;fill.style.width='0%';
           // 中断直後もトントンは続いている。同じ場所に現れる「ホーム」等を誤爆しないよう少し眠らせる
           document.body.classList.add('tlCooldown');
-          setTimeout(()=>document.body.classList.remove('tlCooldown'),1500);
+          setTimeout(()=>document.body.classList.remove('tlCooldown'),1200);
           onAbort();return;
         }
         tick();
@@ -346,7 +346,7 @@ window.TL=(function(){
 <script>
 /* ============================================================
    AMBIENT BGM — ホーム／練習用の環境音（手続き生成）
-   ゆっくり移ろう和音のパッドに、ときどき小さな鈴。拍はない。
+   明るい和音のパッドに、やわらかな分散和音のきらめき。ドラムはない。
    ・ブラウザの自動再生制限により、最初のクリック（空間デバイスの反応）で鳴り始める
    ・AMBIENT_FILE に音声ファイルのURLを入れると、生成音の代わりにそれをループ再生する
      （SUNO等で作った曲を使う場合はここ。同じフォルダに置いて 'ambient.mp3' のように）
@@ -358,13 +358,14 @@ window.AMBIENT=(function(){
   let enabled=QP.get('bgm')!=='0', playing=false, actx=null, master=null, timer=null, audioEl=null;
   let next=0, step=0;
 
-  /* 和音は8小節でひと回り。Cリディア寄りで、暗くならず眠くもならない */
-  const CHORDS=[[130.81,196.00,246.94,329.63],[146.83,220.00,261.63,369.99],
-                [174.61,261.63,329.63,392.00],[130.81,196.00,293.66,349.23],
-                [110.00,164.81,261.63,329.63],[146.83,220.00,293.66,440.00],
-                [174.61,261.63,349.23,523.25],[130.81,196.00,261.63,392.00]];
-  const BELLS=[523.25,659.25,783.99,987.77,1174.66,1318.51];
-  const BAR=6.4;   // 1和音あたりの秒数
+  /* 和音は8小節でひと回り。すべて長三和音系（add9 / maj7 / 6）で、高めの音域に置く */
+  const CHORDS=[[261.63,329.63,392.00,587.33],[349.23,440.00,523.25,659.25],   // Cadd9  Fmaj7
+                [392.00,493.88,587.33,659.25],[261.63,329.63,392.00,523.25],   // G6     C
+                [349.23,440.00,523.25,783.99],[392.00,493.88,587.33,783.99],   // Fadd9  G
+                [329.63,392.00,523.25,659.25],[261.63,392.00,523.25,587.33]];  // C/E    Cadd9
+  const BELLS=[783.99,880.00,1046.50,1174.66,1318.51,1567.98];
+  const BAR=4.8;   // 1和音あたりの秒数
+  const PULSE=0.3; // 分散和音の間隔（秒）＝ 100bpm の8分
 
   function AC(){
     if(!actx){actx=new (window.AudioContext||window.webkitAudioContext)();
@@ -377,7 +378,7 @@ window.AMBIENT=(function(){
       [0,0.4].forEach(det=>{                 // わずかにずらした2本で厚みを出す
         const o=a.createOscillator(),g=a.createGain(),lp=a.createBiquadFilter();
         o.type=i===0?'sine':'triangle';o.frequency.value=f;o.detune.value=det*8-2;
-        lp.type='lowpass';lp.frequency.value=900;
+        lp.type='lowpass';lp.frequency.value=1900;
         const v=(i===0?0.07:0.045)*(det?0.7:1);
         g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+BAR*0.45);
         g.gain.linearRampToValueAtTime(v*0.8,t+BAR*0.8);
@@ -393,14 +394,29 @@ window.AMBIENT=(function(){
     g.gain.exponentialRampToValueAtTime(0.0001,t+2.4);
     o.connect(g);g.connect(master);o.start(t);o.stop(t+2.5);
   }
+  /* やわらかい撥弦。分散和音でゆるやかな前進感を作る */
+  function pluck(t,f,v){
+    const a=AC(),o=a.createOscillator(),g=a.createGain(),lp=a.createBiquadFilter();
+    o.type='triangle';o.frequency.value=f;lp.type='lowpass';lp.frequency.value=2600;
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.9);
+    o.connect(lp);lp.connect(g);g.connect(master);o.start(t);o.stop(t+0.95);
+  }
   function schedule(){
     const a=AC();
     while(next<a.currentTime+0.5){
-      const bar=step%8, t=next;
-      pad(t,CHORDS[bar]);
-      // 鈴は小節ごとに0〜2回、位置は散らす
-      const n=[1,0,2,1,0,1,2,0][bar];
-      for(let k=0;k<n;k++) bell(t+1.2+Math.random()*(BAR-2.4),BELLS[(bar*2+k*3+step)%BELLS.length]);
+      const bar=step%8, t=next, ch=CHORDS[bar];
+      pad(t,ch);
+      // 分散和音：上昇形と下降形を小節ごとに入れ替え、1拍おきに抜いて軽くする
+      const n=Math.floor(BAR/PULSE), up=bar%2===0;
+      for(let k=0;k<n;k++){
+        if(k%4===3)continue;
+        const idx=up?k%ch.length:(ch.length-1-k%ch.length);
+        pluck(t+k*PULSE,ch[idx]*(k%8>=4?2:1),k%4===0?0.05:0.032);
+      }
+      // 鈴はときどき
+      const nb=[1,0,1,2,0,1,1,2][bar];
+      for(let k=0;k<nb;k++) bell(t+0.6+Math.random()*(BAR-1.2),BELLS[(bar*2+k*3+step)%BELLS.length]);
       next+=BAR;step++;
     }
   }
@@ -423,8 +439,12 @@ window.AMBIENT=(function(){
     try{master.gain.linearRampToValueAtTime(0,actx.currentTime+1.2);}catch(e){}
   }
   function toggle(){enabled=!enabled;if(enabled)start();else stop();return enabled;}
-  // 自動再生制限：最初の操作で開始
-  ['pointerdown','keydown'].forEach(ev=>document.addEventListener(ev,()=>start(),{once:false,capture:true}));
+  // 読み込み直後に開始を試みる。ブラウザが自動再生を許している環境
+  // （キオスク起動オプション、またはこのサイトで既に操作済み）ならそのまま鳴る。
+  // 許されていなければ AudioContext が suspended のまま待ち、最初の操作で鳴り始める。
+  function kick(){ if(enabled&&!FILE){start();try{actx.resume();}catch(e){}} else if(enabled&&FILE&&!playing) start(); }
+  if(document.readyState==='complete') kick(); else window.addEventListener('load',kick);
+  ['pointerdown','keydown','pointermove'].forEach(ev=>document.addEventListener(ev,kick,{capture:true,passive:true}));
   return {start,stop,toggle,get enabled(){return enabled;},get playing(){return playing;}};
 })();
 </script>

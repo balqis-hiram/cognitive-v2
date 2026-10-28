@@ -455,8 +455,8 @@ window.TL=(function(){
     idleMs: 900,       // 動きが止まってから球体が消えるまで
     snapVh: 7,         // 空振りを吸着する半径（画面高さ比）
     debounceMs: 360,   // 同じ対象への連打を無視する時間
-    abortMs: 2000,     // 中断に必要な「トントン」の継続時間
-    abortGap: 650      // この間隔より空いたらトントンが途切れたとみなす
+    abortMs: 1000,     // 中断に必要な「かざし続け」の時間（空間デバイスでは連打として届く）
+    abortGap: 500      // クリックの間隔がこれより空いたら手が離れたとみなす
   };
   /* 操作対象。ゲーム側で増やすときは data-hit を付けるだけでよい */
   const SEL='.btn,.opt,.rp,.gear,.brand,.abort,.target,.tok.tappable,.mole,[data-hit]';
@@ -572,7 +572,7 @@ window.TL=(function(){
           start=null;held=false;fill.style.width='0%';
           // 中断直後もトントンは続いている。同じ場所に現れる「ホーム」等を誤爆しないよう少し眠らせる
           document.body.classList.add('tlCooldown');
-          setTimeout(()=>document.body.classList.remove('tlCooldown'),1500);
+          setTimeout(()=>document.body.classList.remove('tlCooldown'),1200);
           onAbort();return;
         }
         tick();
@@ -590,7 +590,7 @@ window.TL=(function(){
   <div class="stage-frame"></div>
   <button class="brand chrome" id="homeBtn">← ホーム</button>
   <button class="gear chrome" id="gearBtn">⚙ 設定</button>
-  <button class="abort" id="abortBtn"><span class="afill" id="abortFill"></span><span class="atxt">トントンで中断</span></button>
+  <button class="abort" id="abortBtn"><span class="afill" id="abortFill"></span><span class="atxt">中断する</span></button>
   <div class="dtChip" id="dtChip"></div>
 
   <div class="combo" id="combo"></div>
@@ -831,10 +831,10 @@ const bgm={playing:false,timer:null,step:0,next:0,gain:null,noise:null};
 const PROG=[                                  // 8小節でひと回り
   {root:130.81,ch:[261.63,329.63,392.00]},   // C
   {root:196.00,ch:[246.94,293.66,392.00]},   // G
-  {root:110.00,ch:[261.63,329.63,440.00]},   // Am
+  {root:174.61,ch:[261.63,349.23,440.00]},   // F
   {root:174.61,ch:[261.63,349.23,440.00]},   // F
   {root:130.81,ch:[261.63,329.63,392.00]},   // C
-  {root:164.81,ch:[246.94,329.63,415.30]},   // E
+  {root:146.83,ch:[293.66,369.99,440.00]},   // D
   {root:174.61,ch:[261.63,349.23,440.00]},   // F
   {root:196.00,ch:[293.66,392.00,493.88]}    // G
 ];
@@ -1170,7 +1170,7 @@ function hideCombo(){comboEl.classList.remove('on');}
 
 /* ===================== 中断 ===================== */
 const abortBtn=$('abortBtn'),abortFill=$('abortFill');
-/* タッチレスでは「押し続け」が来ない。トントン（連打）が2秒続いたら中断 */
+/* タッチレスでは「押し続け」が連打として届く。連打でも押し続けでも1秒続けば中断 */
 TL.bindAbort(abortBtn,abortFill,abortSession);
 function abortSession(){
   holdT=null;abortFill.style.transition='none';abortFill.style.width='0%';
