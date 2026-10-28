@@ -68,25 +68,25 @@ body{background:var(--bg);color:var(--ink);font-family:var(--fJP);font-weight:70
 .chrome{transition:opacity .25s}
 body.playing .chrome{opacity:0;pointer-events:none}
 .brand{position:absolute;top:2.6vh;left:4vh;z-index:20;
-  font-family:var(--fJP);font-weight:900;font-size:clamp(13px,2vh,20px);
+  font-family:var(--fJP);font-weight:900;font-size:clamp(13px,calc(2vh * var(--ui)),52px);
   color:var(--ink);background:var(--panel);border:var(--bw) solid var(--stroke);border-radius:100px;
   padding:1.1vh 2.6vh;cursor:pointer;box-shadow:var(--hard-sm);transition:transform .12s,box-shadow .12s}
 .brand:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--stroke)}
 .gear{position:absolute;top:2.6vh;right:4vh;z-index:20;
-  font-family:var(--fJP);font-weight:900;font-size:clamp(15px,2.3vh,23px);
+  font-family:var(--fJP);font-weight:900;font-size:clamp(15px,calc(2.3vh * var(--ui)),59px);
   color:var(--ink);background:var(--panel);border:var(--bw) solid var(--stroke);border-radius:100px;
   padding:1.3vh 3.2vh;cursor:pointer;box-shadow:var(--hard-sm);transition:transform .12s,box-shadow .12s}
 .gear:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--stroke)}
 
 /* センサー操作を想定し、選択肢は大きく。1つあたり最低9vh確保 */
-.setTitle{font-weight:900;font-size:clamp(24px,4.4vh,48px);margin-bottom:2.4vh}
+.setTitle{font-weight:900;font-size:clamp(24px,calc(4.4vh * var(--ui)),124px);margin-bottom:2.4vh}
 /* 項目名をボタンの左横に置くことで、1行あたりの縦幅を label 1行ぶん節約する */
 .setBlock{display:flex;align-items:center;gap:2vh;margin-bottom:2vh;text-align:left}
-.setLabel{flex:0 0 5em;font-size:clamp(13px,2.2vh,20px);font-weight:700;
+.setLabel{flex:0 0 5em;font-size:clamp(13px,calc(2.2vh * var(--ui)),52px);font-weight:700;
   letter-spacing:.12em;color:var(--dim);line-height:1.3}
 .optRow{flex:1;display:flex;gap:1.6vh;min-width:0}
 .opt{flex:1;min-width:0;min-height:9vh;padding:1.4vh 1vh;cursor:pointer;
-  font-family:var(--fJP);font-weight:900;font-size:clamp(15px,2.7vh,27px);line-height:1.15;
+  font-family:var(--fJP);font-weight:900;font-size:clamp(15px,calc(2.7vh * var(--ui)),70px);line-height:1.15;
   color:var(--ink);background:var(--panel);border:var(--bw) solid var(--stroke);border-radius:18px;
   box-shadow:var(--hard-sm);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5vh;
   transition:transform .12s,box-shadow .12s}
@@ -94,12 +94,12 @@ body.playing .chrome{opacity:0;pointer-events:none}
 .opt:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--stroke)}
 .opt.on{background:var(--violet);color:#fff}
 .opt.on small{color:#fff;opacity:.85}
-.setNote{font-size:clamp(11px,1.8vh,16px);font-weight:500;color:var(--dim);line-height:1.6;
+.setNote{font-size:clamp(11px,calc(1.8vh * var(--ui)),41px);font-weight:500;color:var(--dim);line-height:1.6;
   margin-bottom:0;text-align:left}
 
 /* 中断。誤爆を避けるため長押し2秒。センサーでは「隅を指し続ける」は意図的にしか起きない */
 .abort{display:none;position:absolute;top:3vh;left:4vh;z-index:16;overflow:hidden;
-  font-family:var(--fJP);font-weight:700;font-size:clamp(12px,1.9vh,18px);color:var(--dim);
+  font-family:var(--fJP);font-weight:700;font-size:clamp(12px,calc(1.9vh * var(--ui)),46px);color:var(--dim);
   background:var(--panel);border:3px solid var(--cellLine);border-radius:100px;
   padding:1.1vh 2.4vh;cursor:pointer}
 body.playing .abort{display:block}
@@ -114,11 +114,11 @@ body.playing .abort{display:block}
   text-align:center;transition:background .3s}
 .hub.byColor{background:color-mix(in srgb,var(--blue) 12%,var(--panel))}
 .hub.byShape{background:color-mix(in srgb,var(--amber) 15%,var(--panel))}
-.hubBig{font-weight:900;font-size:clamp(46px,11vh,118px);line-height:1}
+.hubBig{font-weight:900;font-size:clamp(46px,calc(11vh * var(--ui)),306px);line-height:1}
 .hub.byColor .hubBig{color:var(--blue)}
 .hub.byShape .hubBig{color:var(--amber)}
-.hubSml{font-weight:700;font-size:clamp(15px,3.1vh,33px);line-height:1.2;margin-top:.6vh}
-.hubSw{font-weight:900;font-size:clamp(17px,3.3vh,34px);line-height:1.25;color:#fff}
+.hubSml{font-weight:700;font-size:clamp(15px,calc(3.1vh * var(--ui)),85px);line-height:1.2;margin-top:.6vh}
+.hubSw{font-weight:900;font-size:clamp(17px,calc(3.3vh * var(--ui)),88px);line-height:1.25;color:#fff}
 .hub.switching{background:var(--violet);animation:hubPop .5s cubic-bezier(.2,1.6,.4,1)}
 @keyframes hubPop{0%{transform:translate(-50%,-50%) scale(1)}
   45%{transform:translate(-50%,-50%) scale(1.12)}
@@ -176,7 +176,7 @@ body.playing .abort{display:block}
 .conf{position:absolute;width:13px;height:13px;pointer-events:none;z-index:11;border:2px solid var(--stroke)}
 @keyframes cfly{to{transform:translate(var(--dx),var(--dy)) rotate(var(--rot));opacity:0}}
 .popText{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%) scale(.5);
-  font-family:var(--fJP);font-weight:900;font-size:clamp(34px,6vh,74px);opacity:0;z-index:11;
+  font-family:var(--fJP);font-weight:900;font-size:clamp(34px,calc(6vh * var(--ui)),192px);opacity:0;z-index:11;
   pointer-events:none;-webkit-text-stroke:4px var(--stroke);paint-order:stroke fill}
 .popText.go{animation:pt .75s cubic-bezier(.2,1.6,.4,1)}
 @keyframes pt{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}
@@ -184,7 +184,7 @@ body.playing .abort{display:block}
   70%{opacity:1;transform:translate(-50%,-60%) scale(1)}
   100%{opacity:0;transform:translate(-50%,-76%) scale(.95)}}
 .combo{position:absolute;top:3.6vh;right:5vh;z-index:10;
-  font-family:var(--fJP);font-weight:900;font-size:clamp(17px,2.6vh,30px);color:#fff;
+  font-family:var(--fJP);font-weight:900;font-size:clamp(17px,calc(2.6vh * var(--ui)),78px);color:#fff;
   background:var(--good);border:var(--bw) solid var(--stroke);border-radius:100px;
   padding:.8vh 2.4vh;box-shadow:var(--hard-sm);opacity:0;transform:scale(.6) rotate(-4deg);transition:opacity .2s}
 .combo.on{opacity:1;animation:cb .4s cubic-bezier(.2,1.7,.4,1) forwards}
@@ -196,7 +196,7 @@ body.playing .abort{display:block}
 
 /* 二重課題の内容を、プレイ中ずっと小さく出しておく */
 .dtChip{position:absolute;top:9.6vh;left:4vh;z-index:13;display:none;
-  font-weight:700;font-size:clamp(11px,1.8vh,17px);color:var(--dim);
+  font-weight:700;font-size:clamp(11px,calc(1.8vh * var(--ui)),44px);color:var(--dim);
   background:var(--panel);border:3px solid var(--cellLine);border-radius:100px;
   padding:.8vh 2vh;max-width:34vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 body.playing .dtChip.on{display:block}
@@ -216,63 +216,63 @@ body.playing .dtChip.on{display:block}
 .qrCard{background:#fff;border:var(--bw) solid var(--stroke);border-radius:20px;
   padding:2.4vh;display:inline-block;box-shadow:var(--hard)}
 .qrCard img{display:block;width:min(44vh,360px);height:auto;image-rendering:pixelated}
-.qrLead{font-size:clamp(15px,2.6vh,26px);font-weight:900;margin-bottom:2.2vh}
-.qrSub{font-size:clamp(11px,1.8vh,16px);font-weight:500;color:var(--dim);
+.qrLead{font-size:clamp(15px,calc(2.6vh * var(--ui)),67px);font-weight:900;margin-bottom:2.2vh}
+.qrSub{font-size:clamp(11px,calc(1.8vh * var(--ui)),41px);font-weight:500;color:var(--dim);
   line-height:1.7;margin:2.2vh auto 2.6vh;max-width:34em}
 @media (max-width:560px){.res-grid{grid-template-columns:1fr}}
 @media (max-width:700px){.setBlock{flex-direction:column;align-items:stretch;gap:.8vh}
   .setLabel{flex:none}}
 .pc{text-align:center;max-width:1080px;padding:2.4vh 24px;margin:auto}
 
-.bigTitle{font-family:var(--fDisp);font-weight:800;font-size:clamp(40px,11vh,124px);line-height:.9;
+.bigTitle{font-family:var(--fDisp);font-weight:800;font-size:clamp(40px,calc(11vh * var(--ui)),322px);line-height:.9;
   margin-bottom:1.6vh;color:var(--violet);-webkit-text-stroke:5px var(--stroke);paint-order:stroke fill}
-.bigSub{font-weight:900;font-size:clamp(19px,3.6vh,42px);margin-bottom:2.6vh}
+.bigSub{font-weight:900;font-size:clamp(19px,calc(3.6vh * var(--ui)),109px);margin-bottom:2.6vh}
 .bigSub .hl{color:var(--violet)}
 .trains{display:inline-flex;align-items:center;gap:14px;margin-bottom:3vh;
   border:var(--bw) solid var(--stroke);border-radius:100px;padding:1vh 2.8vh;
   background:var(--panel);box-shadow:var(--hard-sm)}
-.trains .tk{font-size:clamp(11px,1.6vh,16px);letter-spacing:.2em;color:var(--dim)}
-.trains .tv{font-weight:900;font-size:clamp(17px,2.9vh,29px);color:var(--violet)}
+.trains .tk{font-size:clamp(11px,calc(1.6vh * var(--ui)),41px);letter-spacing:.2em;color:var(--dim)}
+.trains .tv{font-weight:900;font-size:clamp(17px,calc(2.9vh * var(--ui)),75px);color:var(--violet)}
 .rulepair{display:flex;gap:2.2vh;justify-content:center;margin-bottom:2vh;flex-wrap:wrap}
 .rp{width:min(280px,38vw);background:var(--panel);border:var(--bw) solid var(--stroke);
   border-radius:20px;padding:2.2vh 2vh;cursor:pointer;box-shadow:var(--hard);
   transition:transform .12s,box-shadow .12s}
 .rp:active{transform:translate(6px,6px);box-shadow:0 0 0 var(--stroke)}
-.rp h4{font-weight:900;font-size:clamp(18px,3vh,30px);margin-bottom:.6vh}
+.rp h4{font-weight:900;font-size:clamp(18px,calc(3vh * var(--ui)),78px);margin-bottom:.6vh}
 .rp.byColor h4{color:var(--blue)} .rp.byShape h4{color:var(--amber)}
-.rp .rl{font-size:clamp(14px,2.2vh,22px)}
-.detail{min-height:5.2vh;font-size:clamp(13px,2vh,20px);line-height:1.6;color:var(--dim);
+.rp .rl{font-size:clamp(14px,calc(2.2vh * var(--ui)),57px)}
+.detail{min-height:5.2vh;font-size:clamp(13px,calc(2vh * var(--ui)),52px);line-height:1.6;color:var(--dim);
   margin-bottom:2.4vh;opacity:0;transition:opacity .22s;font-weight:500}
 .detail.on{opacity:1}
 
-.btn{font-family:var(--fJP);font-weight:900;font-size:clamp(17px,2.9vh,29px);color:#fff;
+.btn{font-family:var(--fJP);font-weight:900;font-size:clamp(17px,calc(2.9vh * var(--ui)),75px);color:#fff;
   background:var(--violet);border:var(--bw) solid var(--stroke);border-radius:100px;
   padding:1.7vh 6vh;cursor:pointer;box-shadow:var(--hard);transition:transform .12s,box-shadow .12s}
 .btn:active{transform:translate(6px,6px);box-shadow:0 0 0 var(--stroke)}
 .btn:focus-visible{outline:4px dashed var(--violet);outline-offset:6px}
-.btn.ghost{background:var(--panel);color:var(--ink);font-size:clamp(13px,2vh,19px);padding:1.4vh 3.2vh}
+.btn.ghost{background:var(--panel);color:var(--ink);font-size:clamp(13px,calc(2vh * var(--ui)),49px);padding:1.4vh 3.2vh}
 
-.countdown{font-family:var(--fDisp);font-weight:800;font-size:min(30vh,250px);color:var(--violet);
+.countdown{font-family:var(--fDisp);font-weight:800;font-size:min(calc(30vh * var(--ui)),650px);color:var(--violet);
   -webkit-text-stroke:7px var(--stroke);paint-order:stroke fill;animation:cd 1s ease-in-out}
 @keyframes cd{0%{transform:scale(1.5) rotate(-8deg);opacity:0}30%{opacity:1}100%{transform:scale(.65) rotate(6deg);opacity:0}}
-.blkNo{font-family:var(--fDisp);font-weight:800;font-size:clamp(13px,2vh,20px);letter-spacing:.24em;color:var(--dim);margin-bottom:2vh}
-.blkTitle{font-weight:900;font-size:clamp(34px,8vh,92px);line-height:1.1;margin-bottom:2vh}
-.blkSub{font-size:clamp(15px,2.4vh,24px);color:var(--dim);font-weight:500}
+.blkNo{font-family:var(--fDisp);font-weight:800;font-size:clamp(13px,calc(2vh * var(--ui)),52px);letter-spacing:.24em;color:var(--dim);margin-bottom:2vh}
+.blkTitle{font-weight:900;font-size:clamp(34px,calc(8vh * var(--ui)),239px);line-height:1.1;margin-bottom:2vh}
+.blkSub{font-size:clamp(15px,calc(2.4vh * var(--ui)),62px);color:var(--dim);font-weight:500}
 
 /* ---------- result ---------- */
-.resTitle{font-weight:900;font-size:clamp(22px,4.2vh,50px);line-height:1.15;margin-bottom:2.2vh}
+.resTitle{font-weight:900;font-size:clamp(22px,calc(4.2vh * var(--ui)),130px);line-height:1.15;margin-bottom:2.2vh}
 .res-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5vh;margin-bottom:2vh}
 .res{background:var(--panel);border:var(--bw) solid var(--stroke);border-radius:16px;
   padding:1.8vh 1.7vh;text-align:left;box-shadow:var(--hard-sm)}
-.res .rk{font-weight:900;font-size:clamp(15px,2.4vh,25px);line-height:1.2}
-.res .rt2{font-family:var(--fDisp);font-weight:800;font-size:clamp(9px,1.25vh,13px);
+.res .rk{font-weight:900;font-size:clamp(15px,calc(2.4vh * var(--ui)),65px);line-height:1.2}
+.res .rt2{font-family:var(--fDisp);font-weight:800;font-size:clamp(9px,calc(1.25vh * var(--ui)),33px);
   letter-spacing:.1em;color:var(--dim);margin-bottom:.8vh}
-.res .rd{font-size:clamp(11px,1.55vh,16px);font-weight:500;color:var(--dim);line-height:1.5;margin-bottom:1.2vh}
-.res .rv{font-family:var(--fDisp);font-weight:800;font-size:clamp(28px,5vh,56px);line-height:1}
-.res .ru{font-family:var(--fJP);font-weight:700;font-size:clamp(11px,1.6vh,17px);color:var(--dim);margin-left:5px}
+.res .rd{font-size:clamp(11px,calc(1.55vh * var(--ui)),41px);font-weight:500;color:var(--dim);line-height:1.5;margin-bottom:1.2vh}
+.res .rv{font-family:var(--fDisp);font-weight:800;font-size:clamp(28px,calc(5vh * var(--ui)),145px);line-height:1}
+.res .ru{font-family:var(--fJP);font-weight:700;font-size:clamp(11px,calc(1.6vh * var(--ui)),44px);color:var(--dim);margin-left:5px}
 .res .rb{margin-top:1vh;height:9px;border-radius:100px;background:var(--track);border:2px solid var(--stroke);overflow:hidden}
 .res .rbf{height:100%}
-.resNote{font-size:clamp(10px,1.5vh,14px);font-weight:500;color:var(--dim);margin-bottom:2.2vh;line-height:1.65}
+.resNote{font-size:clamp(10px,calc(1.5vh * var(--ui)),36px);font-weight:500;color:var(--dim);margin-bottom:2.2vh;line-height:1.65}
 
 @media (max-width:900px){.res-grid{grid-template-columns:repeat(2,1fr)}}
 .reduced *{animation:none!important;transition:none!important}
@@ -304,9 +304,9 @@ body[data-theme="dark"]{--violet:#FFB03A;--violet-lt:#FFD27A;--violet-glow:#FFB0
   display:flex;align-items:baseline;gap:2.4vh;
   background:var(--panel);border:var(--bw) solid var(--stroke);border-radius:100px;
   padding:1.2vh 4vh;box-shadow:var(--hard);white-space:nowrap}
-.ruleMain{font-weight:900;font-size:clamp(22px,4.2vh,50px);line-height:1}
+.ruleMain{font-weight:900;font-size:clamp(22px,calc(4.2vh * var(--ui)),130px);line-height:1}
 .ruleMain .g{color:var(--good)}
-.ruleSub{font-weight:700;font-size:clamp(13px,2.2vh,24px);color:var(--bad)}
+.ruleSub{font-weight:700;font-size:clamp(13px,calc(2.2vh * var(--ui)),62px);color:var(--bad)}
 
 
 /* ============================================================
@@ -351,6 +351,33 @@ body[data-theme="dark"]{--tl:#FFB03A; --tl-lt:#FFE6B8}
 .target::after{inset:-22%}
 /* 中断直後：手がまだトントンしているので、同じ位置のボタンを一時的に無効化 */
 .tlCooldown .brand,.tlCooldown .gear,.tlCooldown .abort{pointer-events:none;opacity:.35}
+
+/* ============================================================
+   大画面向けスケール
+   文字・ボタン・的の大きさは clamp(…vh…) に --ui を掛けて一括で拡大
+   （ビルド時に書き換え）。--ui は ?ui=1.4 のようにURLでも変えられる。
+   ============================================================ */
+:root{--ui:1.3}
+/* ボタン同士の間隔を広げる（タッチレスでは隣に手が届きやすい） */
+.optRow{gap:2.8vh}
+.opt{min-height:calc(9vh * var(--ui))}
+.setBlock{margin-bottom:2.6vh;gap:3vh}
+.setLabel{flex-basis:6em}
+.rulepair{gap:4vh;margin-bottom:3vh}
+.rp{width:min(360px,30vw)}
+.res-grid{gap:2.6vh}
+.btn{padding:calc(1.7vh * var(--ui)) calc(6vh * var(--ui))}
+.btn.ghost{padding:calc(1.4vh * var(--ui)) calc(3.2vh * var(--ui))}
+.gear,.brand{padding:calc(1.3vh * var(--ui)) calc(3.2vh * var(--ui))}
+.abort{padding:calc(1.2vh * var(--ui)) calc(2.6vh * var(--ui))}
+/* ボタン行の間隔（14px固定だったもの） */
+.pc > div[style*="gap:14px"]{gap:4vh !important}
+/* 設定画面：項目を2列に並べて、1項目を大きくしても縦に収まるようにする */
+#setScreen .pc{max-width:92vw !important;display:grid;grid-template-columns:1fr 1fr;column-gap:7vh;align-content:center;padding-top:1vh}
+#setScreen .setTitle{margin-bottom:1.6vh}
+#setScreen .setTitle,#setScreen .setNote{grid-column:1/-1}
+#setScreen .setNote{margin-top:1vh}
+@media (max-width:1100px){#setScreen .pc{grid-template-columns:1fr}}
 </style>
 </head>
 <body data-theme="light">
@@ -367,6 +394,8 @@ body[data-theme="dark"]{--tl:#FFB03A; --tl-lt:#FFE6B8}
    ============================================================ */
 window.TL=(function(){
   const QP=new URLSearchParams(location.search);
+  // 大画面向けの拡大率。?ui=1.4 のように上書きできる（0.8〜2.0）
+  if(QP.get('ui')){const u=parseFloat(QP.get('ui'));if(u>=0.8&&u<=2)document.documentElement.style.setProperty('--ui',u);}
   const CFG={
     pointer: QP.get('pointer')!=='0',
     idleMs: 900,       // 動きが止まってから球体が消えるまで

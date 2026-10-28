@@ -42,9 +42,9 @@ body{background:var(--bg);color:var(--ink);font-family:var(--fJP);font-weight:70
 .pc{text-align:center;max-width:1400px;width:100%;padding:3.4vh 20px;
   display:flex;flex-direction:column;justify-content:center}
 
-.title{font-weight:900;font-size:clamp(28px,7.6vh,88px);line-height:1.14;letter-spacing:.01em}
+.title{font-weight:900;font-size:clamp(28px,calc(7.6vh * var(--ui)),228px);line-height:1.14;letter-spacing:.01em}
 .title .hl{color:var(--violet)}
-.lead{font-size:clamp(12px,2vh,19px);font-weight:500;color:var(--dim);line-height:1.7;margin-top:1.2vh}
+.lead{font-size:clamp(12px,calc(2vh * var(--ui)),49px);font-weight:500;color:var(--dim);line-height:1.7;margin-top:1.2vh}
 
 /* ---------- カルーセル ---------- */
 .carousel{position:relative;margin-top:3.2vh;display:flex;align-items:center;gap:1.4vh}
@@ -53,7 +53,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--fJP);font-weight:70
   scrollbar-width:none;-ms-overflow-style:none}
 .track::-webkit-scrollbar{display:none}
 
-.card{flex:0 0 clamp(230px,25vw,320px);scroll-snap-align:start;
+.card{flex:0 0 clamp(230px,calc(19vw * var(--ui)),820px);scroll-snap-align:start;
   background:var(--panel);border:var(--bw) solid var(--stroke);border-radius:22px;
   padding:2.4vh 2vh;text-align:center;cursor:pointer;box-shadow:var(--hard);
   display:flex;flex-direction:column;align-items:center;gap:1.4vh;
@@ -63,21 +63,21 @@ body{background:var(--bg);color:var(--ink);font-family:var(--fJP);font-weight:70
 .card.soon:active{transform:none}
 
 .cHead{display:flex;align-items:center;justify-content:center;gap:1.4vh}
-.cIcon{width:clamp(34px,5.2vh,56px);height:clamp(34px,5.2vh,56px);display:block;flex-shrink:0}
+.cIcon{width:clamp(34px,calc(5.2vh * var(--ui)),145px);height:clamp(34px,calc(5.2vh * var(--ui)),145px);display:block;flex-shrink:0}
 .cIcon [stroke]{stroke:currentColor}
 .cIcon [fill]:not([fill="none"]){fill:currentColor}
-.cName{font-family:var(--fDisp);font-weight:800;font-size:clamp(16px,2.9vh,32px);
+.cName{font-family:var(--fDisp);font-weight:800;font-size:clamp(16px,calc(2.9vh * var(--ui)),83px);
   line-height:1.05;min-width:0}
 .card.a .cIcon,.card.a .cName{color:var(--violet)}
 .card.b .cIcon,.card.b .cName{color:var(--blue)}
 .card.c .cIcon,.card.c .cName{color:var(--amber)}
 .card.d .cIcon,.card.d .cName{color:var(--pink)}
 .card.e .cIcon,.card.e .cName{color:var(--teal)}
-.cSkill{display:inline-block;font-size:clamp(11px,1.8vh,17px);
+.cSkill{display:inline-block;font-size:clamp(11px,calc(1.8vh * var(--ui)),44px);
   border:3px solid var(--stroke);border-radius:100px;padding:.5vh 1.6vh}
-.cDesc{font-size:clamp(13px,2.1vh,22px);font-weight:700;line-height:1.5}
+.cDesc{font-size:clamp(13px,calc(2.1vh * var(--ui)),57px);font-weight:700;line-height:1.5}
 .cGo{margin-top:auto;width:100%;text-align:center;font-weight:900;
-  font-size:clamp(15px,2.3vh,24px);color:#fff;background:var(--violet);
+  font-size:clamp(15px,calc(2.3vh * var(--ui)),62px);color:#fff;background:var(--violet);
   border:3px solid var(--stroke);border-radius:100px;padding:1.3vh 1vh;
   box-shadow:3px 3px 0 var(--stroke)}
 .card.b .cGo{background:var(--blue)}
@@ -86,7 +86,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--fJP);font-weight:70
 .card.e .cGo{background:var(--teal)}
 .card.soon .cGo{background:transparent;color:var(--dim);border-style:dashed;box-shadow:none}
 
-.nav{flex:0 0 auto;width:clamp(46px,6.6vh,70px);height:clamp(46px,6.6vh,70px);
+.nav{flex:0 0 auto;width:clamp(46px,calc(6.6vh * var(--ui)),182px);height:clamp(46px,calc(6.6vh * var(--ui)),182px);
   border-radius:50%;background:var(--panel);border:var(--bw) solid var(--stroke);
   box-shadow:var(--hard-sm);cursor:pointer;display:flex;align-items:center;justify-content:center;
   transition:transform .12s,box-shadow .12s,opacity .2s}
@@ -96,7 +96,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--fJP);font-weight:70
 .nav[disabled]{opacity:.25;pointer-events:none}
 
 .dots{display:flex;gap:1.2vh;justify-content:center;margin-top:1.4vh}
-.dots i{width:clamp(9px,1.3vh,14px);height:clamp(9px,1.3vh,14px);border-radius:50%;
+.dots i{width:clamp(9px,calc(1.3vh * var(--ui)),36px);height:clamp(9px,calc(1.3vh * var(--ui)),36px);border-radius:50%;
   border:3px solid var(--stroke);background:transparent;cursor:pointer;transition:background .2s}
 .dots i.on{background:var(--stroke)}
 
@@ -145,6 +145,33 @@ body[data-theme="dark"]{--tl:#FFB03A; --tl-lt:#FFE6B8}
 /* 中断直後：手がまだトントンしているので、同じ位置のボタンを一時的に無効化 */
 .tlCooldown .brand,.tlCooldown .gear,.tlCooldown .abort{pointer-events:none;opacity:.35}
 
+/* ============================================================
+   大画面向けスケール
+   文字・ボタン・的の大きさは clamp(…vh…) に --ui を掛けて一括で拡大
+   （ビルド時に書き換え）。--ui は ?ui=1.4 のようにURLでも変えられる。
+   ============================================================ */
+:root{--ui:1.3}
+/* ボタン同士の間隔を広げる（タッチレスでは隣に手が届きやすい） */
+.optRow{gap:2.8vh}
+.opt{min-height:calc(9vh * var(--ui))}
+.setBlock{margin-bottom:2.6vh;gap:3vh}
+.setLabel{flex-basis:6em}
+.rulepair{gap:4vh;margin-bottom:3vh}
+.rp{width:min(360px,30vw)}
+.res-grid{gap:2.6vh}
+.btn{padding:calc(1.7vh * var(--ui)) calc(6vh * var(--ui))}
+.btn.ghost{padding:calc(1.4vh * var(--ui)) calc(3.2vh * var(--ui))}
+.gear,.brand{padding:calc(1.3vh * var(--ui)) calc(3.2vh * var(--ui))}
+.abort{padding:calc(1.2vh * var(--ui)) calc(2.6vh * var(--ui))}
+/* ボタン行の間隔（14px固定だったもの） */
+.pc > div[style*="gap:14px"]{gap:4vh !important}
+/* 設定画面：項目を2列に並べて、1項目を大きくしても縦に収まるようにする */
+#setScreen .pc{max-width:92vw !important;display:grid;grid-template-columns:1fr 1fr;column-gap:7vh;align-content:center;padding-top:1vh}
+#setScreen .setTitle{margin-bottom:1.6vh}
+#setScreen .setTitle,#setScreen .setNote{grid-column:1/-1}
+#setScreen .setNote{margin-top:1vh}
+@media (max-width:1100px){#setScreen .pc{grid-template-columns:1fr}}
+
 /* ---- ホーム画面のタッチレス対応 ---- */
 .card,.nav{position:relative}
 .card::before{content:'';position:absolute;inset:-1vh -.8vh;border-radius:inherit}
@@ -152,11 +179,17 @@ body[data-theme="dark"]{--tl:#FFB03A; --tl-lt:#FFE6B8}
 .dots i{position:relative}
 .dots i::before{content:'';position:absolute;inset:-1.4vh;border-radius:50%}
 .tut{display:inline-block;margin:2.2vh auto 0;font-family:var(--fJP);font-weight:900;
-  font-size:clamp(14px,2.2vh,22px);color:var(--ink);background:var(--panel);
+  font-size:clamp(14px,calc(2.2vh * var(--ui)),57px);color:var(--ink);background:var(--panel);
   border:var(--bw) solid var(--stroke);border-radius:100px;padding:1.3vh 3.6vh;cursor:pointer;
   box-shadow:var(--hard-sm);transition:transform .12s,box-shadow .12s}
 .tut:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--stroke)}
 .tut small{font-weight:500;color:var(--dim);margin-right:1.2vh}
+.wrap .pc{max-width:92vw}
+.bgmBtn{position:absolute;top:2.6vh;right:4vh;z-index:20;font-family:var(--fJP);font-weight:900;
+  font-size:clamp(15px,calc(2.3vh * var(--ui)),59px);color:var(--ink);background:var(--panel);
+  border:var(--bw) solid var(--stroke);border-radius:100px;padding:1.3vh 3.2vh;cursor:pointer;
+  box-shadow:var(--hard-sm);transition:transform .12s,box-shadow .12s}
+.bgmBtn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--stroke)}
 </style>
 </head>
 <body data-theme="light">
@@ -173,6 +206,8 @@ body[data-theme="dark"]{--tl:#FFB03A; --tl-lt:#FFE6B8}
    ============================================================ */
 window.TL=(function(){
   const QP=new URLSearchParams(location.search);
+  // 大画面向けの拡大率。?ui=1.4 のように上書きできる（0.8〜2.0）
+  if(QP.get('ui')){const u=parseFloat(QP.get('ui'));if(u>=0.8&&u<=2)document.documentElement.style.setProperty('--ui',u);}
   const CFG={
     pointer: QP.get('pointer')!=='0',
     idleMs: 900,       // 動きが止まってから球体が消えるまで
@@ -307,9 +342,96 @@ window.TL=(function(){
   return {cfg:CFG,bindAbort,movePtr,ripple};
 })();
 </script>
+<script>const AMBIENT_FILE='';   // SUNO等の音声ファイルを使うならここにファイル名（同じフォルダに置く）</script>
+<script>
+/* ============================================================
+   AMBIENT BGM — ホーム／練習用の環境音（手続き生成）
+   ゆっくり移ろう和音のパッドに、ときどき小さな鈴。拍はない。
+   ・ブラウザの自動再生制限により、最初のクリック（空間デバイスの反応）で鳴り始める
+   ・AMBIENT_FILE に音声ファイルのURLを入れると、生成音の代わりにそれをループ再生する
+     （SUNO等で作った曲を使う場合はここ。同じフォルダに置いて 'ambient.mp3' のように）
+   ・?bgm=0 で無効
+   ============================================================ */
+window.AMBIENT=(function(){
+  const QP=new URLSearchParams(location.search);
+  const FILE=(typeof AMBIENT_FILE==='string'&&AMBIENT_FILE)||QP.get('bgmfile')||'';
+  let enabled=QP.get('bgm')!=='0', playing=false, actx=null, master=null, timer=null, audioEl=null;
+  let next=0, step=0;
+
+  /* 和音は8小節でひと回り。Cリディア寄りで、暗くならず眠くもならない */
+  const CHORDS=[[130.81,196.00,246.94,329.63],[146.83,220.00,261.63,369.99],
+                [174.61,261.63,329.63,392.00],[130.81,196.00,293.66,349.23],
+                [110.00,164.81,261.63,329.63],[146.83,220.00,293.66,440.00],
+                [174.61,261.63,349.23,523.25],[130.81,196.00,261.63,392.00]];
+  const BELLS=[523.25,659.25,783.99,987.77,1174.66,1318.51];
+  const BAR=6.4;   // 1和音あたりの秒数
+
+  function AC(){
+    if(!actx){actx=new (window.AudioContext||window.webkitAudioContext)();
+      master=actx.createGain();master.gain.value=0;master.connect(actx.destination);}
+    if(actx.state==='suspended')actx.resume();return actx;
+  }
+  function pad(t,freqs){
+    const a=AC();
+    freqs.forEach((f,i)=>{
+      [0,0.4].forEach(det=>{                 // わずかにずらした2本で厚みを出す
+        const o=a.createOscillator(),g=a.createGain(),lp=a.createBiquadFilter();
+        o.type=i===0?'sine':'triangle';o.frequency.value=f;o.detune.value=det*8-2;
+        lp.type='lowpass';lp.frequency.value=900;
+        const v=(i===0?0.07:0.045)*(det?0.7:1);
+        g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+BAR*0.45);
+        g.gain.linearRampToValueAtTime(v*0.8,t+BAR*0.8);
+        g.gain.linearRampToValueAtTime(0.0001,t+BAR*1.15);
+        o.connect(lp);lp.connect(g);g.connect(master);o.start(t);o.stop(t+BAR*1.2);
+      });
+    });
+  }
+  function bell(t,f){
+    const a=AC(),o=a.createOscillator(),g=a.createGain();
+    o.type='sine';o.frequency.value=f;
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.035,t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+2.4);
+    o.connect(g);g.connect(master);o.start(t);o.stop(t+2.5);
+  }
+  function schedule(){
+    const a=AC();
+    while(next<a.currentTime+0.5){
+      const bar=step%8, t=next;
+      pad(t,CHORDS[bar]);
+      // 鈴は小節ごとに0〜2回、位置は散らす
+      const n=[1,0,2,1,0,1,2,0][bar];
+      for(let k=0;k<n;k++) bell(t+1.2+Math.random()*(BAR-2.4),BELLS[(bar*2+k*3+step)%BELLS.length]);
+      next+=BAR;step++;
+    }
+  }
+  function start(){
+    if(!enabled||playing)return;playing=true;
+    if(FILE){
+      audioEl=new Audio(FILE);audioEl.loop=true;audioEl.volume=0;
+      audioEl.play().then(()=>{let v=0;const iv=setInterval(()=>{v=Math.min(0.5,v+0.02);audioEl.volume=v;if(v>=0.5)clearInterval(iv);},80);})
+        .catch(()=>{playing=false;});
+      return;
+    }
+    const a=AC();
+    master.gain.linearRampToValueAtTime(0.6,a.currentTime+3);
+    next=a.currentTime+0.05;step=0;timer=setInterval(schedule,200);
+  }
+  function stop(){
+    if(!playing)return;playing=false;
+    if(audioEl){audioEl.pause();audioEl=null;return;}
+    clearInterval(timer);
+    try{master.gain.linearRampToValueAtTime(0,actx.currentTime+1.2);}catch(e){}
+  }
+  function toggle(){enabled=!enabled;if(enabled)start();else stop();return enabled;}
+  // 自動再生制限：最初の操作で開始
+  ['pointerdown','keydown'].forEach(ev=>document.addEventListener(ev,()=>start(),{once:false,capture:true}));
+  return {start,stop,toggle,get enabled(){return enabled;},get playing(){return playing;}};
+})();
+</script>
 
 <div class="stage">
   <div class="frame"></div>
+  <button class="bgmBtn" id="bgmBtn" data-hit="click">♪ BGM ON</button>
   <div class="wrap">
     <div class="pc">
       <div class="title">身体空間型<br><span class="hl">認知</span>トレーニング</div>
@@ -426,6 +548,7 @@ $('prev').onclick=()=>go(Math.max(0,current()-1));
 $('next').onclick=()=>go(Math.min(pageCount()-1,current()+1));
 track.addEventListener('scroll',()=>{clearTimeout(track._t);track._t=setTimeout(sync,80)});
 window.addEventListener('resize',()=>{buildDots();sync();});
+$('bgmBtn').onclick=()=>{$('bgmBtn').textContent=AMBIENT.toggle()?'♪ BGM ON':'♪ BGM OFF';};
 $('tutBtn').onclick=()=>{
   const home=location.pathname.split('/').pop()||'index.html';
   location.href='tutorial.html?home='+encodeURIComponent(home);
