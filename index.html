@@ -180,6 +180,26 @@ body[data-theme="dark"]{--tl:#FFB03A; --tl-lt:#FFE6B8}
   pointer-events:none;z-index:1}
 .tok.dwelling{transform:scale(1.04)}
 
+/* ---------- 利用者えらび（タイトル画面） ---------- */
+.userStrip{display:flex;justify-content:center;gap:2.4vh;margin:0 0 3vh;flex-wrap:wrap}
+.uBtn{position:relative;display:flex;flex-direction:column;align-items:center;gap:.6vh;padding:1.4vh 1.8vh 1vh;
+  background:var(--panel);border:var(--bw) solid var(--stroke);border-radius:22px;box-shadow:var(--hard-sm);cursor:pointer;
+  font-family:var(--fJP);font-weight:900;color:var(--ink);opacity:.5;transition:transform .12s,opacity .12s}
+.uBtn svg{width:calc(8vh * var(--ui));height:calc(8vh * var(--ui));display:block}
+.uBtn .uName{font-size:clamp(13px,calc(2.2vh * var(--ui)),62px);line-height:1}
+.uBtn.on{opacity:1;background:color-mix(in srgb,var(--uc) 18%,var(--panel));border-color:var(--uc);transform:translateY(-.6vh)}
+.uBtn::before{content:'';position:absolute;inset:-1vh;border-radius:inherit}
+/* タイトル画面の縦詰め：利用者えらびを入れても1画面に収める */
+.bigTitle{font-size:clamp(36px,calc(7.2vh * var(--ui)),260px);white-space:nowrap;margin-bottom:.8vh}
+.bigSub{margin-bottom:1.6vh}
+.trains{margin-bottom:1.8vh}
+.rulepair{margin-bottom:1.2vh}
+.rp{padding:1.6vh 2vh}
+.detail{min-height:3.2vh;margin-bottom:1.4vh}
+.userStrip{flex-wrap:nowrap;gap:1.8vh;margin-bottom:2.2vh}
+.uBtn{padding:1vh 1.4vh .8vh}
+.uBtn svg{width:calc(6.5vh * var(--ui));height:calc(6.5vh * var(--ui))}
+
 /* ---- ホーム画面のタッチレス対応 ---- */
 .card,.nav{position:relative}
 .card::before{content:'';position:absolute;inset:-1vh -.8vh;border-radius:inherit}
@@ -193,10 +213,17 @@ body[data-theme="dark"]{--tl:#FFB03A; --tl-lt:#FFE6B8}
 .tut:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--stroke)}
 .tut small{font-weight:500;color:var(--dim);margin-right:1.2vh}
 .wrap .pc{max-width:92vw}
-.bgmBtn{position:absolute;top:2.6vh;right:4vh;z-index:20;font-family:var(--fJP);font-weight:900;
+.topRight{position:absolute;top:2.6vh;right:4vh;z-index:20;display:flex;gap:2.4vh}
+.bgmBtn{position:relative;display:flex;align-items:center;gap:1.2vh;font-family:var(--fJP);font-weight:900;
   font-size:clamp(15px,calc(2.3vh * var(--ui)),59px);color:var(--ink);background:var(--panel);
-  border:var(--bw) solid var(--stroke);border-radius:100px;padding:1.3vh 3.2vh;cursor:pointer;
+  border:var(--bw) solid var(--stroke);border-radius:100px;padding:1.3vh 2.6vh;cursor:pointer;
   box-shadow:var(--hard-sm);transition:transform .12s,box-shadow .12s}
+.bgmBtn svg{width:3.4vh;height:3.4vh;display:block}
+.bgmBtn .spk.off{display:none}
+.bgmBtn.off .spk.on{display:none}
+.bgmBtn.off .spk.off{display:block}
+.bgmBtn.off{opacity:.6}
+.bgmBtn::before{content:'';position:absolute;inset:-1.2vh;border-radius:inherit}
 .bgmBtn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--stroke)}
 </style>
 </head>
@@ -547,7 +574,7 @@ window.AMBIENT=(function(){
 
 <div class="stage">
   <div class="frame"></div>
-  <button class="bgmBtn" id="bgmBtn" data-hit="click">♪ BGM ON</button>
+  <div class="topRight"><button class="bgmBtn" id="reportBtn" data-hit="click"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg><span>レポート</span></button><button class="bgmBtn" id="bgmBtn" data-hit="click" aria-label="BGM"><svg class="spk on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg><svg class="spk off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 9l5 6M21 9l-5 6"/></svg></button></div>
   <div class="wrap">
     <div class="pc">
       <div class="title">身体空間型<br><span class="hl">認知</span>トレーニング</div>
@@ -664,7 +691,8 @@ $('prev').onclick=()=>go(Math.max(0,current()-1));
 $('next').onclick=()=>go(Math.min(pageCount()-1,current()+1));
 track.addEventListener('scroll',()=>{clearTimeout(track._t);track._t=setTimeout(sync,80)});
 window.addEventListener('resize',()=>{buildDots();sync();});
-$('bgmBtn').onclick=()=>{$('bgmBtn').textContent=AMBIENT.toggle()?'♪ BGM ON':'♪ BGM OFF';};
+$('bgmBtn').onclick=()=>{$('bgmBtn').classList.toggle('off',!AMBIENT.toggle());};
+$('reportBtn').onclick=()=>{const home=location.pathname.split('/').pop()||'index.html';location.href='report.html?home='+encodeURIComponent(home);};
 $('tutBtn').onclick=()=>{
   const home=location.pathname.split('/').pop()||'index.html';
   location.href='tutorial.html?home='+encodeURIComponent(home);
