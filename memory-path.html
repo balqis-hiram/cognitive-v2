@@ -402,6 +402,8 @@ body[data-theme="dark"]{--tl:#FFB03A; --tl-lt:#FFE6B8}
   background:linear-gradient(90deg,var(--tl) calc(var(--dw)*100%),transparent calc(var(--dw)*100%));
   pointer-events:none;z-index:1}
 .tok.dwelling{transform:scale(1.04)}
+.phaseRound{font-family:var(--fDisp);font-weight:800;font-size:clamp(14px,calc(2.4vh * var(--ui)),78px);color:var(--dim);padding-left:2.4vh;margin-left:.6vh;border-left:3px solid var(--cellLine);line-height:1}
+.phaseRound:empty{display:none}
 </style>
 </head>
 <body data-theme="light">
@@ -654,7 +656,7 @@ window.TL=(function(){
   <div class="popText" id="popText"></div>
 
   <div class="phasePill memo" id="phasePill">
-    <span class="phaseName" id="phaseName">おぼえて</span><span class="phaseCount" id="phaseCount"></span>
+    <span class="phaseName" id="phaseName">おぼえて</span><span class="phaseCount" id="phaseCount"></span><span class="phaseRound" id="phaseRound"></span>
   </div>
   <div class="field" id="field"><div class="grid" id="grid"></div></div>
   <div class="flash" id="flash"></div>
@@ -990,6 +992,7 @@ document.querySelectorAll('.rp').forEach(c=>{
 let state,seq,inputIdx,accepting,curLen,tapAt,combo;
 
 function reset(){
+  $('phaseRound').textContent='';
   state={round:0,bestSpan:0,accSum:0,accCount:0,cleared:0,streak:0,bestStreak:0,rts:[],log:[]};
   curLen=START_LEN;combo=0;
   clearBoard();setPhase('memo',null);
@@ -1027,6 +1030,7 @@ function bump(){cdNum.style.animation='none';void cdNum.offsetWidth;cdNum.style.
 function newRound(){
   if(state.round>=MAX_ROUNDS)return finish();
   state.round++;
+  $('phaseRound').textContent=state.round+' / '+MAX_ROUNDS;
   progBar.style.width=((state.round-1)/MAX_ROUNDS*100)+'%';
   const pool=[...Array(CELLS).keys()];
   seq=[];
