@@ -786,44 +786,132 @@ window.USERS=(function(){
     return out.sort((a,b)=>a.t<b.t?-1:1);
   }
 
-  /* ---------- 助言（設定と取り組み方の提案。効果の断定はしない） ---------- */
+  /* ---------- 助言（設定と取り組み方の提案。効果の断定はしない） ----------
+     その人の記録の形（得意・伸びしろ・推移・回数・使っている設定）から組み立てる。
+     同じ条件でも言い回しが数通りあり、利用者ごと・週ごとに決まった組み合わせを選ぶ */
+  const PACE_UP={slow:'ふつう',normal:'はやい'};
+  const PACE_JP={slow:'ゆっくり',normal:'ふつう',fast:'はやい'};
+  function pick(arr,seed){return arr[Math.abs(seed)%arr.length];}
   function advice(uid,recs){
     const by={};recs.forEach(r=>{(by[r.game]=by[r.game]||[]).push(r);});
-    const tips=[];
-    const last=g=>{const a=by[g];return a&&a[a.length-1].metrics;};
-    const trend=g=>{const a=by[g];if(!a||a.length<4)return 0;const s=a.map(x=>GAMES[g].score(x.metrics));
-      const h=Math.ceil(s.length/2);const f=s.slice(0,h),l=s.slice(h);
-      return avg(l)-avg(f);};
-    const played=Object.keys(GAMES).filter(g=>by[g]);
-    const missing=Object.keys(GAMES).filter(g=>!by[g]);
-    if(missing.length)tips.push({k:'まだ触っていない課題',t:missing.map(g=>GAMES[g].name).join('・')+' を一度ためしてみる。鍛える力がそれぞれ違うので、まんべんなく。'});
-    const m=last('memory');if(m){
-      if(m.span<=3)tips.push({k:'MEMORY PATH',t:'列の長さ3で止まりやすい。「6回・ゆっくり」で短く回数を重ね、光る順を声に出して覚える。'});
-      else if(m.span>=6)tips.push({k:'MEMORY PATH',t:'6個以上たどれている。二重課題「ひき算」を入れた回も試し、同じ設定で記録を見比べる。'});
-      if(m.rt>1300)tips.push({k:'MEMORY PATH',t:'1つめのタッチまでが長め。覚えたら迷わず動き出す練習として「ふつう」ペースも一度。'});
+    const week=Math.floor(Date.now()/(7*864e5));
+    const seed=[...uid].reduce((a,c)=>a*31+c.charCodeAt(0),7)+week;
+    const stat={};
+    Object.keys(GAMES).forEach(g=>{
+      const a=by[g];if(!a)return;
+      const s=a.map(r=>GAMES[g].score(r.metrics));
+      const h=Math.ceil(s.length/2);
+      stat[g]={n:a.length,s:s[s.length-1],best:Math.max(...s),mean:avg(s),
+        d:s.length>=4?avg(s.slice(h))-avg(s.slice(0,h)):0,
+        m:a[a.length-1].metrics,pace:(a[a.length-1].setting||{}).pace||'slow',
+        dt:(a[a.length-1].setting||{}).dt||'none',
+        allSlow:a.every(r=>((r.setting||{}).pace||'slow')==='slow')};
+    });
+    const played=Object.keys(stat), tips=[];
+    if(!played.length)return tips;
+    const N=g=>GAMES[g].name;
+
+    /* 1. 得意と伸びしろ（本人の中での相対） */
+    if(played.length>=3){
+      const sorted=played.slice().sort((a,b)=>stat[b].s-stat[a].s);
+      const top=sorted[0], low=sorted[sorted.length-1];
+      if(stat[top].s-stat[low].s>=12){
+        tips.push({k:'いまの形',t:pick([
+          N(top)+'（'+GAMES[top].skill+'）が得意。'+N(low)+'（'+GAMES[low].skill+'）に回数を寄せると、5つの力のバランスがとれる。',
+          '5つの中では '+N(top)+' が安定。次の2週間は '+N(low)+' を週2回入れてみる。',
+          N(low)+' のスコアが他より低め。ここは「体験用」の短い設定で回数を重ねるのが近道。'],seed)});
+      }
     }
-    const g=last('gonogo');if(g){
-      if(g.hold<70)tips.push({k:'GO / NO-GO',t:'あかに手が出やすい。「ゆっくり」設定で、出た色を確かめてから動く回を増やす。'});
-      if(g.omi>=3)tips.push({k:'GO / NO-GO',t:'みどりの見のがしが目立つ。的の出る6マスを視線で一周してから始める。'});
-      if(g.sd>350)tips.push({k:'GO / NO-GO',t:'反応のばらつきが大きめ。BGMをOFFにした回で、自分のリズムで反応してみる。'});
+    /* 2. 推移 */
+    played.forEach((g,i)=>{
+      const x=stat[g];
+      if(x.d>=8)tips.push({k:N(g),t:pick([
+        'ここ数回は上向き。設定を変えずにあと3回続けて、最高値 '+x.best+' の更新を狙う。',
+        '直近の平均が前半より上がっている。いまの設定が合っているので、しばらく固定する。'],seed+i)});
+      else if(x.d<=-8)tips.push({k:N(g),t:pick([
+        'ここ数回は下がり気味。設定（ペース・問題数・二重課題）が前回と同じか確認する。設定が違うと比較できない。',
+        '直近の平均が前半より低い。体調や時間帯の影響もあるので、まず同じ時間帯・同じ設定で1回。'],seed+i)});
+    });
+    /* 3. 課題ごとの中身（指標の段階で分ける） */
+    const m=stat.memory&&stat.memory.m;
+    if(m){
+      if(m.span<=3)tips.push({k:'MEMORY PATH',t:pick([
+        '列の長さ3で止まりやすい。光る順を声に出して覚えると、手が動きやすい。',
+        '「6回・ゆっくり」で短く回数を重ねる。1回で4個たどれたら、その日は終わりでよい。'],seed+3)});
+      else if(m.span<=5)tips.push({k:'MEMORY PATH',t:pick([
+        '4〜5個が定着。6個に届かない日は、最初の3つを「かたまり」で覚えてから残りを見る。',
+        '5個前後で安定している。10回設定のまま、ミスした回の長さをメモしておくと次回の目安になる。'],seed+3)});
+      else tips.push({k:'MEMORY PATH',t:pick([
+        '6個以上たどれている。二重課題「ひき算」を入れた回も試し、同じ設定で記録を見比べる。',
+        '余裕があるので「20回・しっかり計測」で、後半に落ちるかどうかを見る。'],seed+3)});
+      if(m.rt>1300)tips.push({k:'MEMORY PATH',t:'1つめのタッチまでが長め（'+m.rt+'ms）。覚えたら迷わず動き出す回を1回つくる。'});
     }
-    const mo=last('mogura');if(mo){
-      if(mo.hold<70)tips.push({k:'MOGURA',t:'ばくだんを叩きやすい。穴の数を「9こ」に戻し、×印を見てから手を出す。'});
-      if(mo.hitr<60)tips.push({k:'MOGURA',t:'もぐらに間に合わない回が多い。「ゆっくり」で顔を出している時間を長くする。'});
+    const gn=stat.gonogo&&stat.gonogo.m;
+    if(gn){
+      if(gn.hold<70)tips.push({k:'GO / NO-GO',t:pick([
+        'あかに手が出やすい（おさえられた率 '+gn.hold+'%）。「ゆっくり」で、出た色を確かめてから動く回を増やす。',
+        'つい押してしまう回が多い。的が出たら一拍おいて、みどりのときだけ前に出る、を声に出してやる。'],seed+4)});
+      else if(gn.hold<90)tips.push({k:'GO / NO-GO',t:pick([
+        'おさえられた率 '+gn.hold+'%。あと一歩。みどりの反応時間を落とさずに90%を超えるのが次の目安。',
+        '抑制は安定してきた。問題数を36→80問にして、後半も保てるかを見る。'],seed+4)});
+      else tips.push({k:'GO / NO-GO',t:pick([
+        'ほぼ完全におさえられている。ペースを「'+(PACE_UP[gn.pace]||'はやい')+'」にして、速さの中でも保てるか試す。',
+        'おさえられた率 '+gn.hold+'%。次は反応のばらつき（'+(gn.sd||'—')+'ms）を小さくするのが課題。BGMをOFFにした回で比べる。'],seed+4)});
+      if(gn.omi>=3)tips.push({k:'GO / NO-GO',t:'みどりの見のがしが '+gn.omi+'回。的の出る6マスを視線で一周してから始める。'});
     }
-    const ru=last('rule');if(ru){
-      if(ru.lc>400)tips.push({k:'RULE SWITCH',t:'ルールが変わった直後に遅れる。「ルールチェンジ」の表示で、新しいルールを声に出す。'});
-      if(ru.pe>=2)tips.push({k:'RULE SWITCH',t:'前のルールをひきずる回がある。「2つの的」方式で、必ずどちらかを選ぶ練習をする。'});
+    const mo=stat.mogura&&stat.mogura.m;
+    if(mo){
+      if(mo.hold<70)tips.push({k:'MOGURA',t:pick([
+        'ばくだんを叩きやすい（おさえられた率 '+mo.hold+'%）。穴の数を「9こ」に戻し、×印を見てから手を出す。',
+        'ばくだんに手が出る回が多い。もぐらの顔を確認してから叩く、を2回続ける。'],seed+5)});
+      else if(mo.hitr<70)tips.push({k:'MOGURA',t:pick([
+        'もぐらに間に合わない回が多い（たたけた率 '+mo.hitr+'%）。「ゆっくり」で顔を出している時間を長くする。',
+        '見送りはできている。あとは速さ。穴を12→9こに減らして、手の移動距離を短くする。'],seed+5)});
+      else tips.push({k:'MOGURA',t:pick([
+        'たたけた率 '+mo.hitr+'%・おさえられた率 '+mo.hold+'%。穴を「15こ」に増やして、視野を広く使う回にする。',
+        '安定している。ペースを「'+(PACE_UP[mo.pace]||'はやい')+'」に上げて、速さに慣れる。'],seed+5)});
     }
-    const te=last('tennis');if(te){
-      if(te.hitr<60)tips.push({k:'TENNIS',t:'球に追いつけない回が多い。「ずっと見える」ボールのまま、バウンド点を先に見る。'});
-      else if(te.aim!=null&&te.aim<35)tips.push({k:'TENNIS',t:'ラリーは続いている。ラケットの端で捉えて相手を走らせる返球も試す。'});
+    const ru=stat.rule&&stat.rule.m;
+    if(ru){
+      if(ru.lc>400)tips.push({k:'RULE SWITCH',t:pick([
+        'ルールが変わった直後に遅れる（'+ru.lc+'ms）。「ルールチェンジ」の表示で、新しいルールを声に出す。',
+        '切り替えの遅れが大きめ。パート1・2（単一ルール）を2回やってからパート3に入る。'],seed+6)});
+      else if(ru.pe>=2)tips.push({k:'RULE SWITCH',t:'前のルールをひきずる回が '+ru.pe+'回。「2つの的」方式で、必ずどちらかを選ぶ練習をする。'});
+      else if(ru.acc<80)tips.push({k:'RULE SWITCH',t:'正答率 '+ru.acc+'%。切り替えは速い。ルール表示を見ずに的だけを見ている可能性があるので、中央の表示を一度確認する癖をつける。'});
+      else tips.push({k:'RULE SWITCH',t:pick([
+        '切り替えの遅れ '+ru.lc+'ms・正答率 '+ru.acc+'%。問題数を100問にして、混在パートが長くても保てるかを見る。',
+        '柔軟性スコア '+ru.flex+'。二重課題「曜日」を入れて、同じ設定で比べる。'],seed+6)});
     }
-    played.forEach(gm=>{const d=trend(gm);if(d<=-8)tips.push({k:GAMES[gm].name,t:'ここ数回のスコアが下がり気味。設定（ペース・問題数・二重課題）が前回と同じか確認する。設定が違うと比較できない。'});});
+    const te=stat.tennis&&stat.tennis.m;
+    if(te){
+      if(te.hitr<60)tips.push({k:'TENNIS',t:pick([
+        '球に追いつけない回が多い（追いつけた率 '+te.hitr+'%）。「ずっと見える」ボールのまま、バウンド点を先に見る。',
+        '届かない回が多い。相手が打った瞬間に、ラケットを中央に戻しておく。'],seed+7)});
+      else if((te.lead||0)<200)tips.push({k:'TENNIS',t:'追いつけてはいるが先回りが遅い（'+te.lead+'ms前）。ボールがネットを越える前に動き出す。'});
+      else if(te.aim!=null&&te.aim<35)tips.push({k:'TENNIS',t:'ラリーは続いている（最長 '+te.maxR+'回）。ラケットの端で捉えて相手を走らせる返球も試す。'});
+      else tips.push({k:'TENNIS',t:pick([
+        '先回りが早く、狙いも大胆。「バウンド後にかくれる」ボールに切り替えて、予測だけで取る回にする。',
+        '最長ラリー '+te.maxR+'回。ペースを「'+(PACE_UP[te.pace]||'はやい')+'」にして、速い球でも先回りできるか試す。'],seed+7)});
+    }
+    /* 4. 設定の段階（ずっと「ゆっくり」で高スコアなら一段上げる） */
+    const ready=played.filter(g=>stat[g].allSlow&&stat[g].s>=80&&stat[g].n>=3);
+    if(ready.length)tips.push({k:'設定',t:pick([
+      ready.map(N).join('・')+' はずっと「ゆっくり」で80点以上。1つだけ「ふつう」にして、スコアがどれだけ動くかを見る。',
+      '「ゆっくり」で安定している課題がある（'+ready.map(N).join('・')+'）。ペースを上げるのは1課題ずつ、1段ずつ。'],seed+8)});
+    /* 5. 回数とバランス */
+    const missing=Object.keys(GAMES).filter(g=>!stat[g]);
+    if(missing.length)tips.push({k:'まだ触っていない課題',t:missing.map(N).join('・')+' を一度ためしてみる。鍛える力がそれぞれ違うので、まんべんなく。'});
+    const least=played.slice().sort((a,b)=>stat[a].n-stat[b].n)[0];
+    const most=played.slice().sort((a,b)=>stat[b].n-stat[a].n)[0];
+    if(played.length>=3&&stat[most].n>=stat[least].n*2)tips.push({k:'回数',t:N(most)+' が '+stat[most].n+'回に対し '+N(least)+' は '+stat[least].n+'回。好きな課題に偏っているので、'+N(least)+' を先にやる日をつくる。'});
     const recent=recs.filter(r=>Date.now()-new Date(r.t)<7*864e5).length;
     if(recent===0)tips.push({k:'回数',t:'この1週間は記録がない。短い設定（体験用）でよいので、まず1回。'});
     else if(recent<2)tips.push({k:'回数',t:'週1回のペース。週2〜3回、1回10分ほどを目安に。'});
-    return tips.slice(0,5);
+
+    /* 優先順位：形 → 推移 → 中身 → 設定 → 回数。同じ課題は1つまで、全体で5つ */
+    const seen={},out=[];
+    tips.forEach(t=>{if(seen[t.k]&&!['回数'].includes(t.k))return;seen[t.k]=1;out.push(t);});
+    return out.slice(0,5);
   }
   const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
 
