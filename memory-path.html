@@ -405,7 +405,7 @@ body[data-theme="dark"]{--tl:#FFB03A; --tl-lt:#FFE6B8}
      1. ポインタ球体   … 動きを検知したときだけ現れ、止まると薄れて消える
      2. 空振りの吸着   … 操作対象の外側を押しても、近くの対象へ届ける
      3. 連打の抑制     … 同じ対象への短時間の連打は1回に丸める
-     4. 中断ボタン     … 「押し続け」ではなく「トントンし続けた時間」で判定
+     4. 中断ボタン     … 「かざし続けた時間」で判定（デバイスからは連打として届く）
    URL: ?pointer=0 で球体を消せる
    ============================================================ */
 window.TL=(function(){
@@ -417,8 +417,8 @@ window.TL=(function(){
     idleMs: 900,       // 動きが止まってから球体が消えるまで
     snapVh: 7,         // 空振りを吸着する半径（画面高さ比）
     debounceMs: 360,   // 同じ対象への連打を無視する時間
-    abortMs: 1000,     // 中断に必要な「かざし続け」の時間（空間デバイスでは連打として届く）
-    abortGap: 500      // クリックの間隔がこれより空いたら手が離れたとみなす
+    abortMs: 600,      // 中断に必要な「かざし続け」の時間
+    abortGap: 400      // クリックの間隔がこれより空いたら手が離れたとみなす
   };
   /* 操作対象。ゲーム側で増やすときは data-hit を付けるだけでよい */
   const SEL='.btn,.opt,.rp,.gear,.brand,.abort,.target,.tok.tappable,.mole,[data-hit]';
@@ -508,8 +508,16 @@ window.TL=(function(){
     lastClickEl=el;lastClickT=n;
   },true);
 
+  /* 中断直後の保護：手が離れて（クリックが止まって）から 800ms 経つまで、同じ位置のボタンを無効化 */
+  let cdT=null;
+  function cooldown(){
+    document.body.classList.add('tlCooldown');
+    clearTimeout(cdT);cdT=setTimeout(()=>document.body.classList.remove('tlCooldown'),800);
+  }
+  document.addEventListener('pointerdown',()=>{if(document.body.classList.contains('tlCooldown'))cooldown();},true);
+
   /* ---------- 4. 中断ボタン ---------- */
-  /* マウスなら押し続け、空間デバイスならトントン。どちらでも ms だけ続けば発火 */
+  /* 利用者の動作は「かざし続ける」。マウスなら押し続け、空間デバイスからは連打として届く。どちらでも ms だけ続けば発火 */
   function bindAbort(btn,fill,onAbort,opt){
     const ms=(opt&&opt.ms)||CFG.abortMs, gap=(opt&&opt.gap)||CFG.abortGap;
     let start=null,lastTap=0,held=false,raf=0;
@@ -532,9 +540,8 @@ window.TL=(function(){
         fill.style.width=Math.min(100,p*100)+'%';
         if(p>=1){
           start=null;held=false;fill.style.width='0%';
-          // 中断直後もトントンは続いている。同じ場所に現れる「ホーム」等を誤爆しないよう少し眠らせる
-          document.body.classList.add('tlCooldown');
-          setTimeout(()=>document.body.classList.remove('tlCooldown'),1200);
+          // 中断直後も手はかざされたまま。同じ場所に現れる「ホーム」等を誤爆しないよう少し眠らせる
+          cooldown();
           onAbort();return;
         }
         tick();
@@ -543,7 +550,40 @@ window.TL=(function(){
     return {reset(){start=null;held=false;fill.style.width='0%';}};
   }
 
-  return {cfg:CFG,bindAbort,movePtr,ripple};
+  /* ---------- 5. 設定の保存 ----------
+     .opt を押すたびに localStorage へ保存。ペース・二重課題・画面・効果音・BGM は全ゲーム共通、
+     それ以外（問題数・穴の数・回答方式・ボール）はページごと。URLの ?pace= 等はこれより優先 */
+  const SHARED=['segPace','segDT','segTheme','segSfx','segBgm'];
+  const page=(location.pathname.split('/').pop()||'index.html');
+  const key=g=>SHARED.includes(g)?'cognify.shared':'cognify.'+page;
+  const load=k=>{try{return JSON.parse(localStorage.getItem(k)||'{}');}catch(e){return {};}};
+  function saveOpt(btn){
+    const grp=btn.closest('.optRow');if(!grp||!grp.id)return;
+    const k=key(grp.id),o=load(k);o[grp.id]=btn.dataset.v;
+    try{localStorage.setItem(k,JSON.stringify(o));}catch(e){}
+  }
+  document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.opt');if(b)saveOpt(b);});
+  function restoreSettings(){
+    const all=Object.assign({},load('cognify.'+page),load('cognify.shared'));
+    Object.keys(all).forEach(g=>{
+      const grp=document.getElementById(g);if(!grp)return;
+      const b=grp.querySelector('.opt[data-v="'+all[g]+'"]');
+      if(b&&!b.classList.contains('on'))b.click();
+    });
+  }
+  /* URLの指定（?pace=fast 等）を保存済み設定より優先させるため、復元のあとにもう一度当てる */
+  const QMAP=[['size','segSize'],['pace','segPace'],['dt','segDT'],['theme','segTheme'],['holes','segHoles'],['mode','segMode'],
+              ['sfx','segSfx',v=>v==='1'?'on':'off'],['bgm','segBgm',v=>v==='1'?'on':'off'],['occ','segOcc',v=>v==='1'?'on':'off']];
+  function applyQueryOverride(){
+    QMAP.forEach(([q,g,f])=>{
+      if(!QP.has(q))return;const grp=document.getElementById(g);if(!grp)return;
+      const v=f?f(QP.get(q)):QP.get(q);const b=grp.querySelector('.opt[data-v="'+v+'"]');
+      if(b&&!b.classList.contains('on'))b.click();
+    });
+  }
+  function clearSettings(){try{localStorage.removeItem('cognify.shared');localStorage.removeItem('cognify.'+page);}catch(e){}}
+
+  return {cfg:CFG,bindAbort,movePtr,ripple,restoreSettings,applyQueryOverride,clearSettings};
 })();
 </script>
 
@@ -832,7 +872,7 @@ function bgmQuiet(on){
   try{const a=AC();bgm.gain.gain.linearRampToValueAtTime(on?0.16:0.55,a.currentTime+0.35);}catch(e){}
 }
 function schedule(){
-  const a=AC(), beat=60/pace.bpm;              // 3拍子・8小節でひと回り
+  const a=AC(), beat=60/66;   /* BGMのテンポはペース設定と無関係に固定 */              // 3拍子・8小節でひと回り
   while(bgm.next<a.currentTime+0.2){
     const s=bgm.step%3, bar=Math.floor(bgm.step/3)%8, t=bgm.next;
     if(s===0) pad(t,CHORDS[bar],beat*3*0.96);
@@ -1079,6 +1119,7 @@ function finish(){
 }
 
 reset();
+TL.restoreSettings();TL.applyQueryOverride();
 })();
 
 </script>
