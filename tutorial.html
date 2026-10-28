@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRACTICE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=M+PLUS+Rounded+1c:wght@500;700;800;900&display=swap');
+
+:root{
+  /* 書体を変えるならこの2行だけ */
+  --fJP:'M PLUS Rounded 1c',system-ui,sans-serif;
+  --fDisp:'Baloo 2','M PLUS Rounded 1c',sans-serif;
+
+  --bg:#FFF3D6; --stage:#FFFBEF; --panel:#FFFFFF;
+  --stroke:#221E18; --ink:#221E18; --dim:#6E665A; --track:#EDE4CE;
+  --cell:#00000008; --cellLine:#221E1826;
+
+  --blue:#1B6EF3;  --blue-lt:#5E9BFF;
+  --amber:#FF8A00; --amber-lt:#FFB44D;
+  --violet:#7C3AED;--violet-lt:#A97BFF;
+  --good:#12B886;  --bad:#FF4D5E;
+
+  --hard:6px 6px 0 var(--stroke);
+  --hard-sm:4px 4px 0 var(--stroke);
+  --bw:4px;
+}
+body[data-theme="dark"]{
+  --bg:#12131C; --stage:#1A1C28; --panel:#232636;
+  --stroke:#FFF6E0; --ink:#FFF6E0; --dim:#9AA0B5; --track:#2E3244;
+  --cell:#FFFFFF08; --cellLine:#FFF6E026;
+
+  --blue:#4D9BFF;  --blue-lt:#8CC0FF;
+  --amber:#FFB03A; --amber-lt:#FFD27A;
+  --violet:#B98BFF;--violet-lt:#D4B8FF;
+  --good:#3EE0A8;  --bad:#FF6B7D;
+}
+
+/* ============================================================
+   かさなりの順番（z-index）
+   数字が大きいほど手前に表示されます。
+   画面を新しく足すときは、下敷きにしたくない相手より
+   大きい数字を書けばOKです。
+
+      20  歯車ボタン
+      18  設定画面
+      16  中断ボタン
+      14  スタート／パート導入／カウントダウン／結果
+      12  紙吹雪・ふきだし・ルールチェンジ
+       5  ルール表示・正誤の光る枠
+       4  的とリング
+       2  外枠
+   ============================================================ */
+
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--ink);font-family:var(--fJP);font-weight:700;
+  -webkit-font-smoothing:antialiased;user-select:none;transition:background .3s,color .3s}
+.dp{font-family:var(--fJP);font-weight:900}
+.num{font-family:var(--fDisp);font-weight:800;font-feature-settings:"tnum"}
+
+.stage{position:relative;width:100vw;height:100vh;overflow:hidden;background:var(--stage);transition:background .3s}
+.stage-frame{position:absolute;inset:16px;border:var(--bw) solid var(--stroke);border-radius:24px;
+  pointer-events:none;z-index:2}
+
+/* ---------- chrome ---------- */
+.chrome{transition:opacity .25s}
+body.playing .chrome{opacity:0;pointer-events:none}
+.brand{position:absolute;top:2.6vh;left:4vh;z-index:20;
+  font-family:var(--fJP);font-weight:900;font-size:clamp(13px,2vh,20px);
+  color:var(--ink);background:var(--panel);border:var(--bw) solid var(--stroke);border-radius:100px;
+  padding:1.1vh 2.6vh;cursor:pointer;box-shadow:var(--hard-sm);transition:transform .12s,box-shadow .12s}
+.brand:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--stroke)}
+.gear{position:absolute;top:2.6vh;right:4vh;z-index:20;
+  font-family:var(--fJP);font-weight:900;font-size:clamp(15px,2.3vh,23px);
+  color:var(--ink);background:var(--panel);border:var(--bw) solid var(--stroke);border-radius:100px;
+  padding:1.3vh 3.2vh;cursor:pointer;box-shadow:var(--hard-sm);transition:transform .12s,box-shadow .12s}
+.gear:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--stroke)}
+
+/* センサー操作を想定し、選択肢は大きく。1つあたり最低9vh確保 */
+.setTitle{font-weight:900;font-size:clamp(24px,4.4vh,48px);margin-bottom:2.4vh}
+/* 項目名をボタンの左横に置くことで、1行あたりの縦幅を label 1行ぶん節約する */
+.setBlock{display:flex;align-items:center;gap:2vh;margin-bottom:2vh;text-align:left}
+.setLabel{flex:0 0 5em;font-size:clamp(13px,2.2vh,20px);font-weight:700;
+  letter-spacing:.12em;color:var(--dim);line-height:1.3}
+.optRow{flex:1;display:flex;gap:1.6vh;min-width:0}
+.opt{flex:1;min-width:0;min-height:9vh;padding:1.4vh 1vh;cursor:pointer;
+  font-family:var(--fJP);font-weight:900;font-size:clamp(15px,2.7vh,27px);line-height:1.15;
+  color:var(--ink);background:var(--panel);border:var(--bw) solid var(--stroke);border-radius:18px;
+  box-shadow:var(--hard-sm);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5vh;
+  transition:transform .12s,box-shadow .12s}
+.opt small{font-size:.58em;font-weight:500;color:var(--dim);letter-spacing:.02em}
+.opt:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--stroke)}
+.opt.on{background:var(--violet);color:#fff}
+.opt.on small{color:#fff;opacity:.85}
+.setNote{font-size:clamp(11px,1.8vh,16px);font-weight:500;color:var(--dim);line-height:1.6;
+  margin-bottom:0;text-align:left}
+
+/* 中断。誤爆を避けるため長押し2秒。センサーでは「隅を指し続ける」は意図的にしか起きない */
+.abort{display:none;position:absolute;top:3vh;left:4vh;z-index:16;overflow:hidden;
+  font-family:var(--fJP);font-weight:700;font-size:clamp(12px,1.9vh,18px);color:var(--dim);
+  background:var(--panel);border:3px solid var(--cellLine);border-radius:100px;
+  padding:1.1vh 2.4vh;cursor:pointer}
+body.playing .abort{display:block}
+.afill{position:absolute;left:0;top:0;height:100%;width:0;background:var(--bad);opacity:.3}
+.atxt{position:relative}
+
+/* ---------- 中央ハブ：ホーム兼ルール表示 ---------- */
+.hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:32%;aspect-ratio:1;border-radius:50%;z-index:5;
+  border:var(--bw) solid var(--stroke);box-shadow:var(--hard);background:var(--panel);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;transition:background .3s}
+.hub.byColor{background:color-mix(in srgb,var(--blue) 12%,var(--panel))}
+.hub.byShape{background:color-mix(in srgb,var(--amber) 15%,var(--panel))}
+.hubBig{font-weight:900;font-size:clamp(46px,11vh,118px);line-height:1}
+.hub.byColor .hubBig{color:var(--blue)}
+.hub.byShape .hubBig{color:var(--amber)}
+.hubSml{font-weight:700;font-size:clamp(15px,3.1vh,33px);line-height:1.2;margin-top:.6vh}
+.hubSw{font-weight:900;font-size:clamp(17px,3.3vh,34px);line-height:1.25;color:#fff}
+.hub.switching{background:var(--violet);animation:hubPop .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes hubPop{0%{transform:translate(-50%,-50%) scale(1)}
+  45%{transform:translate(-50%,-50%) scale(1.12)}
+  100%{transform:translate(-50%,-50%) scale(1)}}
+
+/* ---------- リング配置：ホームから等距離の8ゾーン ---------- */
+.field{position:absolute;left:16px;right:16px;top:5vh;bottom:6vh;z-index:4;
+  display:flex;align-items:center;justify-content:center}
+/* 正方形にしないと縦横で半径が変わり「等距離」が崩れる */
+.ring{position:relative;height:100%;aspect-ratio:1;max-width:100%;max-height:100%}
+.cell{position:absolute;width:25%;aspect-ratio:1;transform:translate(-50%,-50%);
+  border:3px solid var(--cellLine);border-radius:20px;background:var(--cell);
+  display:flex;align-items:center;justify-content:center}
+
+.target{position:absolute;height:72%;aspect-ratio:1;cursor:pointer;
+  transform:scale(.2);opacity:0;transition:transform .3s cubic-bezier(.2,1.7,.4,1),opacity .18s}
+.target.show{transform:scale(1);opacity:1}
+.target::after{content:'';position:absolute;inset:-16%;border-radius:26%}
+.target.show .shape{animation:bob var(--bobDur,3.4s) ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-7px) rotate(1.5deg)}}
+.c-blue{--fill:var(--blue);--fg:var(--blue-lt)}
+.c-amber{--fill:var(--amber);--fg:var(--amber-lt)}
+.shape{width:100%;height:100%;position:relative;
+  background:linear-gradient(160deg,var(--fg),var(--fill));
+  border:var(--bw) solid var(--stroke);box-shadow:var(--hard);
+  display:flex;align-items:center;justify-content:center}
+.s-circle{border-radius:50%}
+.s-square{border-radius:20px}
+
+.fuse{position:absolute;left:-9%;top:-9%;width:118%;height:118%;
+  transform:rotate(-90deg);pointer-events:none;z-index:0;overflow:visible}
+.fuse circle{fill:none;stroke:var(--violet);stroke-width:5;stroke-linecap:round;
+  stroke-dasharray:289;stroke-dashoffset:0;opacity:.55}
+.target.show .fuse circle{animation-name:fuse;animation-timing-function:linear;animation-fill-mode:forwards}
+@keyframes fuse{to{stroke-dashoffset:289}}
+.target.hit .fuse,.target.miss .fuse{opacity:0;transition:opacity .1s}
+
+/* かお */
+.face{position:relative;width:56%;height:40%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:14%}
+.eyes{display:flex;gap:26%;width:74%;justify-content:center}
+.eyes i{width:13%;min-width:8px;aspect-ratio:1/1.35;background:#221E18;border-radius:50%;transition:all .12s}
+.mouth{width:30%;height:16%;min-height:7px;border-bottom:5px solid #221E18;border-radius:0 0 60% 60%;transition:all .12s}
+.target.hit .eyes i{aspect-ratio:1/.4;border-radius:2px}
+.target.hit .mouth{width:44%;height:26%;border-bottom-width:7px}
+.target.miss .eyes i{aspect-ratio:1/.35;border-radius:2px;transform:rotate(28deg)}
+.target.miss .eyes i:last-child{transform:rotate(-28deg)}
+.target.miss .mouth{border-bottom:none;border-top:5px solid #221E18;border-radius:60% 60% 0 0}
+.target.hit .shape{animation:hit .45s cubic-bezier(.2,1.6,.4,1) forwards}
+.target.miss .shape{animation:miss .5s ease forwards}
+@keyframes hit{0%{transform:scale(1)}35%{transform:scale(1.22) rotate(6deg)}100%{transform:scale(0) rotate(20deg);opacity:0}}
+@keyframes miss{0%{transform:scale(1)}15%{transform:translateX(-11px) rotate(-5deg)}30%{transform:translateX(11px) rotate(5deg)}45%{transform:translateX(-8px)}60%{transform:translateX(8px)}100%{transform:scale(.85);opacity:0}}
+
+/* ---------- FX ---------- */
+.conf{position:absolute;width:13px;height:13px;pointer-events:none;z-index:11;border:2px solid var(--stroke)}
+@keyframes cfly{to{transform:translate(var(--dx),var(--dy)) rotate(var(--rot));opacity:0}}
+.popText{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%) scale(.5);
+  font-family:var(--fJP);font-weight:900;font-size:clamp(34px,6vh,74px);opacity:0;z-index:11;
+  pointer-events:none;-webkit-text-stroke:4px var(--stroke);paint-order:stroke fill}
+.popText.go{animation:pt .75s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pt{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}
+  22%{opacity:1;transform:translate(-50%,-58%) scale(1.1)}
+  70%{opacity:1;transform:translate(-50%,-60%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-76%) scale(.95)}}
+.combo{position:absolute;top:3.6vh;right:5vh;z-index:10;
+  font-family:var(--fJP);font-weight:900;font-size:clamp(17px,2.6vh,30px);color:#fff;
+  background:var(--good);border:var(--bw) solid var(--stroke);border-radius:100px;
+  padding:.8vh 2.4vh;box-shadow:var(--hard-sm);opacity:0;transform:scale(.6) rotate(-4deg);transition:opacity .2s}
+.combo.on{opacity:1;animation:cb .4s cubic-bezier(.2,1.7,.4,1) forwards}
+@keyframes cb{0%{transform:scale(.6) rotate(-10deg)}60%{transform:scale(1.15) rotate(3deg)}100%{transform:scale(1) rotate(-3deg)}}
+.flash{position:absolute;inset:16px;border-radius:24px;pointer-events:none;z-index:5;opacity:0}
+.flash.good{box-shadow:inset 0 0 0 9px var(--good);animation:fl .45s ease}
+.flash.bad{box-shadow:inset 0 0 0 9px var(--bad);animation:fl .45s ease}
+@keyframes fl{0%{opacity:1}100%{opacity:0}}
+
+/* 二重課題の内容を、プレイ中ずっと小さく出しておく */
+.dtChip{position:absolute;top:9.6vh;left:4vh;z-index:13;display:none;
+  font-weight:700;font-size:clamp(11px,1.8vh,17px);color:var(--dim);
+  background:var(--panel);border:3px solid var(--cellLine);border-radius:100px;
+  padding:.8vh 2vh;max-width:34vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.playing .dtChip.on{display:block}
+
+.prog{position:absolute;left:5vh;right:5vh;bottom:3.4vh;height:12px;z-index:6;
+  background:var(--track);border:3px solid var(--stroke);border-radius:100px;overflow:hidden}
+.prog>span{display:block;height:100%;width:0;background:var(--violet);transition:width .35s ease}
+
+/* ---------- overlays ---------- */
+.overlay{position:absolute;inset:16px;z-index:14;display:flex;align-items:center;justify-content:center;
+  background:var(--stage);border-radius:20px;overflow:auto}
+.overlay.hidden{display:none}
+/* 設定は他のオーバーレイより手前。同値だとDOM順で下敷きになる */
+#setScreen{z-index:18}
+#qrScreen{z-index:19}
+/* QRは常に白地・黒。暗いテーマでも反転させない */
+.qrCard{background:#fff;border:var(--bw) solid var(--stroke);border-radius:20px;
+  padding:2.4vh;display:inline-block;box-shadow:var(--hard)}
+.qrCard img{display:block;width:min(44vh,360px);height:auto;image-rendering:pixelated}
+.qrLead{font-size:clamp(15px,2.6vh,26px);font-weight:900;margin-bottom:2.2vh}
+.qrSub{font-size:clamp(11px,1.8vh,16px);font-weight:500;color:var(--dim);
+  line-height:1.7;margin:2.2vh auto 2.6vh;max-width:34em}
+@media (max-width:560px){.res-grid{grid-template-columns:1fr}}
+@media (max-width:700px){.setBlock{flex-direction:column;align-items:stretch;gap:.8vh}
+  .setLabel{flex:none}}
+.pc{text-align:center;max-width:1080px;padding:2.4vh 24px;margin:auto}
+
+.bigTitle{font-family:var(--fDisp);font-weight:800;font-size:clamp(40px,11vh,124px);line-height:.9;
+  margin-bottom:1.6vh;color:var(--violet);-webkit-text-stroke:5px var(--stroke);paint-order:stroke fill}
+.bigSub{font-weight:900;font-size:clamp(19px,3.6vh,42px);margin-bottom:2.6vh}
+.bigSub .hl{color:var(--violet)}
+.trains{display:inline-flex;align-items:center;gap:14px;margin-bottom:3vh;
+  border:var(--bw) solid var(--stroke);border-radius:100px;padding:1vh 2.8vh;
+  background:var(--panel);box-shadow:var(--hard-sm)}
+.trains .tk{font-size:clamp(11px,1.6vh,16px);letter-spacing:.2em;color:var(--dim)}
+.trains .tv{font-weight:900;font-size:clamp(17px,2.9vh,29px);color:var(--violet)}
+.rulepair{display:flex;gap:2.2vh;justify-content:center;margin-bottom:2vh;flex-wrap:wrap}
+.rp{width:min(280px,38vw);background:var(--panel);border:var(--bw) solid var(--stroke);
+  border-radius:20px;padding:2.2vh 2vh;cursor:pointer;box-shadow:var(--hard);
+  transition:transform .12s,box-shadow .12s}
+.rp:active{transform:translate(6px,6px);box-shadow:0 0 0 var(--stroke)}
+.rp h4{font-weight:900;font-size:clamp(18px,3vh,30px);margin-bottom:.6vh}
+.rp.byColor h4{color:var(--blue)} .rp.byShape h4{color:var(--amber)}
+.rp .rl{font-size:clamp(14px,2.2vh,22px)}
+.detail{min-height:5.2vh;font-size:clamp(13px,2vh,20px);line-height:1.6;color:var(--dim);
+  margin-bottom:2.4vh;opacity:0;transition:opacity .22s;font-weight:500}
+.detail.on{opacity:1}
+
+.btn{font-family:var(--fJP);font-weight:900;font-size:clamp(17px,2.9vh,29px);color:#fff;
+  background:var(--violet);border:var(--bw) solid var(--stroke);border-radius:100px;
+  padding:1.7vh 6vh;cursor:pointer;box-shadow:var(--hard);transition:transform .12s,box-shadow .12s}
+.btn:active{transform:translate(6px,6px);box-shadow:0 0 0 var(--stroke)}
+.btn:focus-visible{outline:4px dashed var(--violet);outline-offset:6px}
+.btn.ghost{background:var(--panel);color:var(--ink);font-size:clamp(13px,2vh,19px);padding:1.4vh 3.2vh}
+
+.countdown{font-family:var(--fDisp);font-weight:800;font-size:min(30vh,250px);color:var(--violet);
+  -webkit-text-stroke:7px var(--stroke);paint-order:stroke fill;animation:cd 1s ease-in-out}
+@keyframes cd{0%{transform:scale(1.5) rotate(-8deg);opacity:0}30%{opacity:1}100%{transform:scale(.65) rotate(6deg);opacity:0}}
+.blkNo{font-family:var(--fDisp);font-weight:800;font-size:clamp(13px,2vh,20px);letter-spacing:.24em;color:var(--dim);margin-bottom:2vh}
+.blkTitle{font-weight:900;font-size:clamp(34px,8vh,92px);line-height:1.1;margin-bottom:2vh}
+.blkSub{font-size:clamp(15px,2.4vh,24px);color:var(--dim);font-weight:500}
+
+/* ---------- result ---------- */
+.resTitle{font-weight:900;font-size:clamp(22px,4.2vh,50px);line-height:1.15;margin-bottom:2.2vh}
+.res-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5vh;margin-bottom:2vh}
+.res{background:var(--panel);border:var(--bw) solid var(--stroke);border-radius:16px;
+  padding:1.8vh 1.7vh;text-align:left;box-shadow:var(--hard-sm)}
+.res .rk{font-weight:900;font-size:clamp(15px,2.4vh,25px);line-height:1.2}
+.res .rt2{font-family:var(--fDisp);font-weight:800;font-size:clamp(9px,1.25vh,13px);
+  letter-spacing:.1em;color:var(--dim);margin-bottom:.8vh}
+.res .rd{font-size:clamp(11px,1.55vh,16px);font-weight:500;color:var(--dim);line-height:1.5;margin-bottom:1.2vh}
+.res .rv{font-family:var(--fDisp);font-weight:800;font-size:clamp(28px,5vh,56px);line-height:1}
+.res .ru{font-family:var(--fJP);font-weight:700;font-size:clamp(11px,1.6vh,17px);color:var(--dim);margin-left:5px}
+.res .rb{margin-top:1vh;height:9px;border-radius:100px;background:var(--track);border:2px solid var(--stroke);overflow:hidden}
+.res .rbf{height:100%}
+.resNote{font-size:clamp(10px,1.5vh,14px);font-weight:500;color:var(--dim);margin-bottom:2.2vh;line-height:1.65}
+
+@media (max-width:900px){.res-grid{grid-template-columns:repeat(2,1fr)}}
+.reduced *{animation:none!important;transition:none!important}
+
+
+/* ============================================================
+   TOUCHLESS LAYER — 空間デバイス（非接触）向けの共通レイヤー
+   1) ポインタ球体：センサーが動きを検知したときだけ現れる
+   2) 透明反応エリア：見た目は変えず、当たり判定だけ広げる
+   3) 連打対策・中断ボタン（JS側）
+   色は --tl にまとめてあるので、ここを変えれば球体の色が変わる
+   ============================================================ */
+:root{--tl:#FF8A00; --tl-lt:#FFD9A3; --tlSize:9vh}
+body[data-theme="dark"]{--tl:#FFB03A; --tl-lt:#FFE6B8}
+
+.tlPointer{position:fixed;left:0;top:0;width:var(--tlSize);height:var(--tlSize);
+  margin:calc(var(--tlSize) * -0.5) 0 0 calc(var(--tlSize) * -0.5);
+  pointer-events:none;z-index:40;opacity:0;transition:opacity .22s;will-change:transform}
+.tlPointer.on{opacity:1}
+.tlCore{width:100%;height:100%;border-radius:50%;transition:transform .09s cubic-bezier(.2,1.6,.4,1);
+  background:radial-gradient(circle at 38% 34%,
+    color-mix(in srgb,var(--tl-lt) 92%,transparent),
+    color-mix(in srgb,var(--tl) 58%,transparent) 42%,
+    color-mix(in srgb,var(--tl) 16%,transparent) 70%,
+    transparent 72%);
+  box-shadow:0 0 2.6vh color-mix(in srgb,var(--tl) 38%,transparent)}
+.tlPointer.down .tlCore{transform:scale(.72)}
+.tlRipple{position:fixed;width:var(--tlSize);height:var(--tlSize);
+  margin:calc(var(--tlSize) * -0.5) 0 0 calc(var(--tlSize) * -0.5);
+  border-radius:50%;border:4px solid color-mix(in srgb,var(--tl) 75%,transparent);
+  pointer-events:none;z-index:39;animation:tlRip .55s ease-out forwards}
+@keyframes tlRip{to{transform:scale(2.3);opacity:0}}
+.reduced .tlRipple{display:none}
+
+/* 透明反応エリア：::before を要素の外側まで広げる。
+   透明なので見た目はそのまま、当たり判定だけ大きくなる。
+   隣り合うボタン同士は、すき間の半分弱まで。残りは JS の吸着が受け持つ */
+.btn,.rp{position:relative}   /* .gear .brand .mole .abort はもともと absolute */
+.btn::before,.rp::before{content:'';position:absolute;inset:-2.2vh -2.4vh;border-radius:inherit}
+.gear::before,.brand::before{content:'';position:absolute;inset:-1.8vh -2vh;border-radius:inherit}
+.opt::before{content:'';position:absolute;inset:-.9vh -.7vh;border-radius:inherit}
+.opt{position:relative}
+.mole::before{content:'';position:absolute;inset:-20% -16%;border-radius:50%}
+.tok.tappable::before{content:'';position:absolute;inset:-16%;border-radius:40%}
+.target::after{inset:-22%}
+/* 中断直後：手がまだトントンしているので、同じ位置のボタンを一時的に無効化 */
+.tlCooldown .brand,.tlCooldown .gear,.tlCooldown .abort{pointer-events:none;opacity:.35}
+
+
+/* 練習ページの基調色はポインタと同じオレンジ */
+:root{--violet:#FF8A00;--violet-lt:#FFB44D}
+body[data-theme="dark"]{--violet:#FFB03A;--violet-lt:#FFD27A}
+
+.field{top:14vh;bottom:6.5vh}
+/* 横長の画面いっぱいに的を散らす。リングは正方形でなくてよい */
+.ring{aspect-ratio:auto;width:100%;height:100%}
+.cell{width:34vh;height:34vh;aspect-ratio:auto;border:none;background:none}
+.cell.big{width:46vh;height:46vh}
+.target{height:78%}
+
+/* 上部の案内 */
+.guide{position:absolute;top:3.2vh;left:50%;transform:translateX(-50%);z-index:5;
+  display:flex;align-items:center;gap:2.4vh;max-width:90vw;
+  background:var(--panel);border:var(--bw) solid var(--stroke);border-radius:100px;
+  padding:1.2vh 4vh;box-shadow:var(--hard);white-space:nowrap}
+.gStep{font-family:var(--fDisp);font-weight:800;font-size:clamp(14px,2.2vh,24px);letter-spacing:.14em;color:var(--dim)}
+.gMain{font-weight:900;font-size:clamp(20px,3.8vh,46px);line-height:1;color:var(--violet)}
+.gSub{font-weight:700;font-size:clamp(12px,2vh,22px);color:var(--dim)}
+
+/* 中断ボタンの練習で、左上を指す矢印 */
+.hint{position:absolute;top:9.5vh;left:5vh;z-index:13;display:none;
+  font-weight:900;font-size:clamp(18px,3.4vh,40px);color:var(--violet);
+  animation:hintBob 1s ease-in-out infinite}
+.hint.on{display:block}
+@keyframes hintBob{0%,100%{transform:translate(0,0)}50%{transform:translate(-1vh,-1vh)}}
+body.playing .abort{border-color:var(--violet)}
+
+/* 「動かす」ステップ：玉が通った跡を薄く残す */
+.trail{position:fixed;width:3vh;height:3vh;margin:-1.5vh;border-radius:50%;
+  background:var(--violet);opacity:.18;pointer-events:none;z-index:3;
+  animation:trailFade 1.6s ease-out forwards}
+@keyframes trailFade{to{opacity:0;transform:scale(.3)}}
+.meter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;
+  width:40vh;text-align:center;pointer-events:none}
+.meter .mtxt{font-weight:900;font-size:clamp(16px,2.8vh,32px);color:var(--dim);margin-bottom:1.6vh}
+.meter .mbar{height:2.4vh;border-radius:100px;background:var(--track);border:3px solid var(--stroke);overflow:hidden}
+.meter .mbar>span{display:block;height:100%;width:0;background:var(--violet);transition:width .15s}
+
+.btnWrap{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);z-index:5;text-align:center}
+.btnWrap .note{margin-top:2.4vh;font-size:clamp(13px,2vh,20px);font-weight:500;color:var(--dim)}
+.tip{font-size:clamp(14px,2.2vh,24px);font-weight:700;line-height:1.9;text-align:left;
+  display:inline-block;margin:0 auto 2.6vh;background:var(--panel);border:var(--bw) solid var(--stroke);
+  border-radius:20px;padding:2vh 3.4vh;box-shadow:var(--hard-sm)}
+.tip b{color:var(--violet)}
+</style>
+</head>
+<body data-theme="light">
+<script>
+/* ============================================================
+   TOUCHLESS LAYER (JS)
+   Trouvezの空間デバイスはマウス／タッチ相当のイベントを送ってくる前提。
+   ここでは次の4つを面倒みる。
+     1. ポインタ球体   … 動きを検知したときだけ現れ、止まると薄れて消える
+     2. 空振りの吸着   … 操作対象の外側を押しても、近くの対象へ届ける
+     3. 連打の抑制     … 同じ対象への短時間の連打は1回に丸める
+     4. 中断ボタン     … 「押し続け」ではなく「トントンし続けた時間」で判定
+   URL: ?pointer=0 で球体を消せる
+   ============================================================ */
+window.TL=(function(){
+  const QP=new URLSearchParams(location.search);
+  const CFG={
+    pointer: QP.get('pointer')!=='0',
+    idleMs: 900,       // 動きが止まってから球体が消えるまで
+    snapVh: 7,         // 空振りを吸着する半径（画面高さ比）
+    debounceMs: 360,   // 同じ対象への連打を無視する時間
+    abortMs: 2000,     // 中断に必要な「トントン」の継続時間
+    abortGap: 650      // この間隔より空いたらトントンが途切れたとみなす
+  };
+  /* 操作対象。ゲーム側で増やすときは data-hit を付けるだけでよい */
+  const SEL='.btn,.opt,.rp,.gear,.brand,.abort,.target,.tok.tappable,.mole,[data-hit]';
+  const CLICKY='.btn,.opt,.rp,.gear,.brand,[data-hit=click]';   // onclick で動くもの
+  const vh=()=>innerHeight/100;
+
+  /* ---------- 1. ポインタ球体 ---------- */
+  let ptr=null,core=null,idleT=null;
+  function ensurePtr(){
+    if(ptr||!CFG.pointer)return;
+    ptr=document.createElement('div');ptr.className='tlPointer';
+    core=document.createElement('div');core.className='tlCore';
+    ptr.appendChild(core);document.body.appendChild(ptr);
+  }
+  function movePtr(x,y){
+    if(!CFG.pointer)return;ensurePtr();
+    ptr.style.transform='translate('+x+'px,'+y+'px)';
+    ptr.classList.add('on');
+    clearTimeout(idleT);idleT=setTimeout(()=>ptr.classList.remove('on'),CFG.idleMs);
+  }
+  function ripple(x,y){
+    if(!CFG.pointer)return;
+    const r=document.createElement('div');r.className='tlRipple';
+    r.style.left=x+'px';r.style.top=y+'px';
+    document.body.appendChild(r);setTimeout(()=>r.remove(),600);
+  }
+  document.addEventListener('pointermove',e=>movePtr(e.clientX,e.clientY),{passive:true});
+  document.addEventListener('pointerdown',e=>{
+    movePtr(e.clientX,e.clientY);ripple(e.clientX,e.clientY);
+    if(ptr){ptr.classList.add('down');setTimeout(()=>ptr.classList.remove('down'),140);}
+  },{capture:true,passive:true});
+  document.addEventListener('pointerleave',()=>{if(ptr)ptr.classList.remove('on');});
+  document.addEventListener('pointerout',e=>{if(!e.relatedTarget&&ptr)ptr.classList.remove('on');});
+
+  /* ---------- 2. 吸着  3. 連打抑制 ---------- */
+  function visible(el){
+    const cs=getComputedStyle(el);
+    if(cs.display==='none'||cs.visibility==='hidden'||cs.pointerEvents==='none'||+cs.opacity<0.05)return false;
+    const r=el.getBoundingClientRect();
+    if(r.width<2||r.height<2)return false;
+    // 他の画面（オーバーレイ等）の下敷きになっていないか
+    const top=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);
+    return !!top&&(top===el||el.contains(top));
+  }
+  function nearest(x,y){
+    const R=CFG.snapVh*vh();let best=null,bd=R;
+    document.querySelectorAll(SEL).forEach(el=>{
+      if(!visible(el))return;
+      const r=el.getBoundingClientRect();
+      const dx=Math.max(r.left-x,0,x-r.right), dy=Math.max(r.top-y,0,y-r.bottom);
+      const d=Math.hypot(dx,dy);
+      if(d<bd){bd=d;best=el;}
+    });
+    return best;
+  }
+  let lastDownEl=null,lastDownT=0,lastClickEl=null,lastClickT=0;
+  function forward(el,e){
+    const ev=new PointerEvent('pointerdown',{bubbles:true,cancelable:true,
+      clientX:e.clientX,clientY:e.clientY,pointerType:e.pointerType||'mouse',
+      pointerId:e.pointerId,isPrimary:true,button:0,buttons:1});
+    el.dispatchEvent(ev);
+    if(el.matches(CLICKY)){
+      const n=performance.now();
+      if(el===lastClickEl&&n-lastClickT<CFG.debounceMs)return;
+      lastClickEl=el;lastClickT=n;el.click();
+    }
+  }
+  document.addEventListener('pointerdown',e=>{
+    if(!e.isTrusted)return;
+    if(e.target.closest&&e.target.closest('.court,[data-nosnap]'))return;
+    const n=performance.now();
+    const el=e.target.closest&&e.target.closest(SEL);
+    if(el){
+      if(!el.matches('.abort')&&el===lastDownEl&&n-lastDownT<CFG.debounceMs){
+        e.stopPropagation();e.preventDefault();return;      // 連打の2発目以降は捨てる
+      }
+      lastDownEl=el;lastDownT=n;return;
+    }
+    const cand=nearest(e.clientX,e.clientY);
+    if(cand){e.stopPropagation();e.preventDefault();lastDownEl=cand;lastDownT=n;forward(cand,e);}
+  },true);
+  document.addEventListener('click',e=>{
+    if(!e.isTrusted)return;
+    const el=e.target.closest&&e.target.closest(CLICKY);if(!el)return;
+    const n=performance.now();
+    if(el===lastClickEl&&n-lastClickT<CFG.debounceMs){e.stopPropagation();e.preventDefault();return;}
+    lastClickEl=el;lastClickT=n;
+  },true);
+
+  /* ---------- 4. 中断ボタン ---------- */
+  /* マウスなら押し続け、空間デバイスならトントン。どちらでも ms だけ続けば発火 */
+  function bindAbort(btn,fill,onAbort,opt){
+    const ms=(opt&&opt.ms)||CFG.abortMs, gap=(opt&&opt.gap)||CFG.abortGap;
+    let start=null,lastTap=0,held=false,raf=0;
+    fill.style.transition='none';
+    btn.addEventListener('pointerdown',e=>{
+      e.preventDefault();e.stopPropagation();
+      const n=performance.now();held=true;
+      if(start===null)start=n;
+      lastTap=n;if(!raf)tick();
+    });
+    const release=()=>{held=false;};
+    document.addEventListener('pointerup',release,true);
+    document.addEventListener('pointercancel',release,true);
+    function tick(){
+      raf=requestAnimationFrame(()=>{
+        raf=0;if(start===null)return;
+        const n=performance.now();
+        if(!held&&n-lastTap>gap){start=null;fill.style.width='0%';return;}
+        const p=(n-start)/ms;
+        fill.style.width=Math.min(100,p*100)+'%';
+        if(p>=1){
+          start=null;held=false;fill.style.width='0%';
+          // 中断直後もトントンは続いている。同じ場所に現れる「ホーム」等を誤爆しないよう少し眠らせる
+          document.body.classList.add('tlCooldown');
+          setTimeout(()=>document.body.classList.remove('tlCooldown'),1500);
+          onAbort();return;
+        }
+        tick();
+      });
+    }
+    return {reset(){start=null;held=false;fill.style.width='0%';}};
+  }
+
+  return {cfg:CFG,bindAbort,movePtr,ripple};
+})();
+</script>
+
+<div class="stage" id="stage">
+  <div class="stage-frame"></div>
+  <button class="brand chrome" id="homeBtn">← ホーム</button>
+  <button class="abort" id="abortBtn"><span class="afill" id="abortFill"></span><span class="atxt">トントンで中断</span></button>
+  <div class="hint" id="hint">↖ ここをトントン</div>
+
+  <div class="popText" id="popText"></div>
+  <div class="guide" id="guide"><span class="gStep" id="gStep">1 / 5</span><span class="gMain" id="gMain"></span><span class="gSub" id="gSub"></span></div>
+
+  <div class="field" id="field"><div class="ring" id="ring"></div></div>
+  <div class="meter" id="meter" style="display:none"><div class="mtxt">玉を 大きく 動かしてみましょう</div><div class="mbar"><span id="meterBar"></span></div></div>
+  <div class="btnWrap" id="btnWrap" style="display:none">
+    <button class="btn" id="pracBtn">このボタン</button>
+    <div class="note">小さく見えても、少しくらい外れても反応します。</div>
+  </div>
+  <div class="meter" id="centerMsg" style="display:none;width:70vw"><div class="mtxt" id="centerTxt"></div></div>
+  <div class="flash" id="flash"></div>
+  <div class="prog"><span id="progBar"></span></div>
+
+  <div class="overlay" id="startScreen">
+    <div class="pc">
+      <div class="bigTitle">PRACTICE</div>
+      <div class="bigSub">手をかざして、画面に<span class="hl">さわる</span>。</div>
+      <div class="trains"><span class="tk">おぼえること</span><span class="tv">手の位置と 光の玉</span></div>
+      <div class="rulepair">
+        <div class="rp byColor" data-mode="move"><h4>うごかす</h4><div class="rl">手を動かすと 玉がついてくる</div></div>
+        <div class="rp byShape" data-mode="touch"><h4>さわる</h4><div class="rl">玉を的に重ねると 反応する</div></div>
+      </div>
+      <div class="detail" id="detail"></div>
+      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;align-items:center">
+        <button class="btn" id="startBtn">はじめる</button>
+        <button class="btn ghost" id="backBtn" style="display:none">ゲームへもどる</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="cdScreen"><div class="countdown" id="cdNum">3</div></div>
+
+  <div class="overlay hidden" id="resScreen">
+    <div class="pc">
+      <div class="resTitle">これで 準備OK。</div>
+      <div class="tip">
+        ・オレンジの玉が、いまの手の位置です<br>
+        ・玉を的やボタンに<b>重ねる</b>だけで反応します<br>
+        ・やめたいときは、左上を<b>トントンと2秒</b>
+      </div>
+      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+        <button class="btn" id="backBtn2" style="display:none">ゲームへもどる</button>
+        <button class="btn ghost" id="againBtn">もう一度</button>
+        <button class="btn ghost" id="homeBtn2">ホームへ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+if(window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches)
+  document.body.classList.add('reduced');
+
+const QP=new URLSearchParams(location.search);
+const HOME_URL=QP.get('home')||'index.html';
+const BACK_URL=QP.get('back')||'';
+if(['light','dark'].includes(QP.get('theme'))) document.body.dataset.theme=QP.get('theme');
+
+const $=x=>document.getElementById(x);
+const stage=$('stage'),ring=$('ring'),flash=$('flash'),popText=$('popText'),progBar=$('progBar');
+const startScreen=$('startScreen'),cdScreen=$('cdScreen'),cdNum=$('cdNum'),resScreen=$('resScreen');
+const show=el=>el.classList.remove('hidden'), hide=el=>el.classList.add('hidden');
+const cv=n=>getComputedStyle(document.body).getPropertyValue(n).trim();
+let runId=0;
+const later=(fn,ms)=>{const id=runId;return setTimeout(()=>{if(id===runId)fn();},ms);};
+const STEPS=5;let curStep=0;
+
+/* ---- 音 ---- */
+let actx=null,master=null,sfxOn=QP.get('sfx')!=='0';
+function AC(){
+  if(!actx){actx=new (window.AudioContext||window.webkitAudioContext)();
+    master=actx.createGain();master.gain.value=1;master.connect(actx.destination);}
+  if(actx.state==='suspended')actx.resume();return actx;
+}
+function tone(freqs,dur,type,vol){
+  if(!sfxOn)return;
+  try{const a=AC(),t=a.currentTime;
+    freqs.forEach((f,i)=>{const o=a.createOscillator(),g=a.createGain();
+      o.type=type;o.frequency.value=f;const t0=t+i*dur*0.55;
+      g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+      o.connect(g);g.connect(master);o.start(t0);o.stop(t0+dur+0.02);});}catch(e){}
+}
+const sGood=()=>tone([784,1175],0.13,'triangle',0.18);
+const sStep=()=>tone([523,659,880],0.16,'square',0.10);
+const sDone=()=>tone([523,659,784,1047],0.18,'triangle',0.14);
+
+/* ---- 共通FX ---- */
+function doFlash(k){flash.className='flash '+k;void flash.offsetWidth;flash.classList.add(k);
+  setTimeout(()=>flash.className='flash',480);}
+function pop(txt,color){popText.textContent=txt;popText.style.color=color;
+  popText.classList.remove('go');void popText.offsetWidth;popText.classList.add('go');}
+function confetti(x,y){
+  if(document.body.classList.contains('reduced'))return;
+  const cols=['#FFD43B','#4DD4AC','#FF8FA3','#74C0FC',cv('--violet'),cv('--amber')];
+  for(let i=0;i<12;i++){
+    const c=document.createElement('div');c.className='conf';
+    const a=Math.random()*Math.PI*2,d=70+Math.random()*130;
+    c.style.left=x+'px';c.style.top=y+'px';c.style.background=cols[i%cols.length];
+    c.style.borderRadius=Math.random()<.5?'50%':'3px';
+    c.style.setProperty('--dx',Math.cos(a)*d+'px');
+    c.style.setProperty('--dy',(Math.sin(a)*d+90)+'px');
+    c.style.setProperty('--rot',(Math.random()*1080-540)+'deg');
+    c.style.animation='cfly .85s cubic-bezier(.15,.7,.3,1) forwards';
+    stage.appendChild(c);setTimeout(()=>c.remove(),900);
+  }
+}
+function guide(step,main,sub){
+  curStep=step;$('gStep').textContent=step+' / '+STEPS;$('gMain').textContent=main;$('gSub').textContent=sub||'';
+  progBar.style.width=((step-1)/STEPS*100)+'%';
+}
+function clearRing(){ring.innerHTML='';}
+function makeTarget(x,y,big,onHit){
+  const c=document.createElement('div');c.className='cell'+(big?' big':'');
+  c.style.left=x+'%';c.style.top=y+'%';
+  const el=document.createElement('div');el.className='target c-blue';
+  el.innerHTML='<div class="shape s-circle"><div class="face"><div class="eyes"><i></i><i></i></div><div class="mouth"></div></div></div>';
+  c.appendChild(el);ring.appendChild(c);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('show')));
+  let done=false;
+  el.addEventListener('pointerdown',e=>{
+    if(done)return;done=true;
+    const r=stage.getBoundingClientRect();
+    el.classList.add('hit');sGood();doFlash('good');confetti(e.clientX-r.left,e.clientY-r.top);
+    setTimeout(()=>c.remove(),500);onHit();
+  });
+  return el;
+}
+
+/* ---- 開始画面 ---- */
+const TEXT={move:'手を動かすと、オレンジの光の玉がついてきます。これが「いま手がある場所」です。',
+            touch:'玉を的やボタンに重ねると、さわったことになります。強く押す必要はありません。'};
+document.querySelectorAll('.rp').forEach(c=>{
+  c.onclick=()=>{$('detail').textContent=TEXT[c.dataset.mode];$('detail').classList.add('on');};
+});
+$('homeBtn').onclick=()=>{location.href=HOME_URL;};
+$('homeBtn2').onclick=()=>{location.href=HOME_URL;};
+if(BACK_URL){
+  ['backBtn','backBtn2'].forEach(id=>{$(id).style.display='';$(id).onclick=()=>{location.href=BACK_URL;};});
+}
+$('startBtn').onclick=start;
+$('againBtn').onclick=()=>{hide(resScreen);start();};
+
+/* ---- 流れ ---- */
+function start(){
+  AC();runId++;hide(startScreen);clearRing();
+  document.body.classList.add('playing');
+  $('meter').style.display='none';$('btnWrap').style.display='none';$('centerMsg').style.display='none';$('hint').classList.remove('on');
+  progBar.style.width='0%';
+  countdown(step1);
+}
+function countdown(next){
+  show(cdScreen);const id=runId;
+  let n=3;cdNum.textContent=n;bump();
+  const iv=setInterval(()=>{
+    if(id!==runId){clearInterval(iv);return;}
+    n--;if(n===0){clearInterval(iv);hide(cdScreen);next();return;}
+    cdNum.textContent=n;bump();},900);
+}
+function bump(){cdNum.style.animation='none';void cdNum.offsetWidth;cdNum.style.animation='';}
+function advance(txt,next){
+  pop(txt,cv('--good'));sStep();
+  later(next,1100);
+}
+
+/* 1. 動かす：玉が合計で画面高さの1.2倍ぶん動いたら合格。
+   センサーの検知が途切れて飛んだ分（1回で20vh超）は数えない */
+let moveHandler=null;
+function step1(){
+  guide(1,'手を 動かしてみましょう','オレンジの玉が ついてきます');
+  $('meter').style.display='';$('meterBar').style.width='0%';
+  const NEED=innerHeight*1.2;let acc=0,lx=null,ly=null,done=false,lastTrail=0;
+  moveHandler=e=>{
+    if(done)return;
+    if(lx!==null){
+      const d=Math.hypot(e.clientX-lx,e.clientY-ly);
+      if(d<innerHeight*0.2)acc+=d;
+    }
+    lx=e.clientX;ly=e.clientY;
+    const n=performance.now();
+    if(n-lastTrail>40){lastTrail=n;const t=document.createElement('div');t.className='trail';
+      t.style.left=e.clientX+'px';t.style.top=e.clientY+'px';document.body.appendChild(t);setTimeout(()=>t.remove(),1700);}
+    $('meterBar').style.width=Math.min(100,acc/NEED*100)+'%';
+    if(acc>=NEED){done=true;document.removeEventListener('pointermove',moveHandler);
+      $('meter').style.display='none';advance('いいですね！',step2);}
+  };
+  document.addEventListener('pointermove',moveHandler);
+}
+/* 2. まんなかの的 */
+function step2(){
+  guide(2,'まんなかの的に さわってみましょう','玉を 的に重ねるだけ');
+  clearRing();
+  makeTarget(50,50,true,()=>advance('できた！',step3));
+}
+/* 3. 4すみ */
+function step3(){
+  guide(3,'4つの的を さわりましょう','順番は 自由です');
+  clearRing();let left=4;
+  [[14,22],[86,22],[14,78],[86,78]].forEach(([x,y])=>
+    makeTarget(x,y,false,()=>{left--;if(left===0)advance('ぜんぶ さわれた！',step4);}));
+}
+/* 4. ボタン */
+function step4(){
+  guide(4,'ボタンも 押してみましょう','少しくらい 外れても大丈夫');
+  clearRing();$('btnWrap').style.display='';
+  $('pracBtn').onclick=()=>{
+    $('btnWrap').style.display='none';doFlash('good');sGood();
+    advance('ばっちり！',step5);
+  };
+}
+/* 5. 中断の合図 */
+function step5(){
+  guide(5,'やめたいときの 合図','左上を トントンと2秒');
+  $('hint').classList.add('on');
+  $('centerTxt').textContent='ゲームの途中でやめたいときは、左上のボタンに手をかざして、トントンと2秒つづけます。';
+  $('centerMsg').style.display='';
+}
+TL.bindAbort($('abortBtn'),$('abortFill'),()=>{
+  if(!document.body.classList.contains('playing'))return;
+  if(curStep!==5){                      // 練習の途中でトントンされたら、本番と同じく中断
+    runId++;document.body.classList.remove('playing');clearRing();
+    if(moveHandler)document.removeEventListener('pointermove',moveHandler);
+    $('meter').style.display='none';$('btnWrap').style.display='none';$('centerMsg').style.display='none';hide(cdScreen);
+    progBar.style.width='0%';show(startScreen);tone([440,330],0.16,'triangle',0.10);return;
+  }
+  $('hint').classList.remove('on');$('centerMsg').style.display='none';
+  doFlash('good');sGood();
+  advance('できました！',finish);
+});
+function finish(){
+  runId++;document.body.classList.remove('playing');
+  progBar.style.width='100%';clearRing();
+  show(resScreen);sDone();
+}
+})();
+</script>
+</body>
+</html>
